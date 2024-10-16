@@ -1,0 +1,144 @@
+     1                                  section .data                   ;section containing initialized data
+     2                                  
+     3 00000000 50726F63657373696E-     Statmsg: db "Processing ...",10
+     3 00000009 67202E2E2E0A       
+     4                                      Statlen equ $-Statmsg
+     5 0000000F 2E2E2E646F6E65210A      Donemsg: db "...done!",10
+     6                                      Donelen equ $-Donemsg
+     7                                  
+     8                                      ;translation table
+     9                                  
+    10                                  Upcase:
+    11 00000018 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,09h,0Ah,20h,20h,20h,20h,20h
+    11 00000021 090A2020202020     
+    12 00000028 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    12 00000031 20202020202020     
+    13 00000038 202122232425262728-         db 20h,21h,22h,23h,24h,25h,26h,27h,28h,29h,2Ah,2Bh,2Ch,2Dh,2Eh,2Fh
+    13 00000041 292A2B2C2D2E2F     
+    14 00000048 303132333435363738-         db 30h,31h,32h,33h,34h,35h,36h,37h,38h,39h,3Ah,3Bh,3Ch,3Dh,3Eh,3Fh
+    14 00000051 393A3B3C3D3E3F     
+    15 00000058 404142434445464748-         db 40h,41h,42h,43h,44h,45h,46h,47h,48h,49h,4Ah,4Bh,4Ch,4Dh,4Eh,4Fh
+    15 00000061 494A4B4C4D4E4F     
+    16 00000068 505152535455565758-         db 50h,51h,52h,53h,54h,55h,56h,57h,58h,59h,5Ah,5Bh,5Ch,5Dh,5Eh,5Fh
+    16 00000071 595A5B5C5D5E5F     
+    17 00000078 604142434445464748-         db 60h,41h,42h,43h,44h,45h,46h,47h,48h,49h,4Ah,4Bh,4Ch,4Dh,4Eh,4Fh
+    17 00000081 494A4B4C4D4E4F     
+    18 00000088 505152535455565758-         db 50h,51h,52h,53h,54h,55h,56h,57h,58h,59h,5Ah,7Bh,7Ch,7Dh,7Eh,20h
+    18 00000091 595A7B7C7D7E20     
+    19 00000098 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    19 000000A1 20202020202020     
+    20 000000A8 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    20 000000B1 20202020202020     
+    21 000000B8 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    21 000000C1 20202020202020     
+    22 000000C8 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    22 000000D1 20202020202020     
+    23 000000D8 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    23 000000E1 20202020202020     
+    24 000000E8 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    24 000000F1 20202020202020     
+    25 000000F8 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    25 00000101 20202020202020     
+    26 00000108 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    26 00000111 20202020202020     
+    27                                  
+    28                                      ;Custom table
+    29                                  Custom:
+    30 00000118 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,09h,0Ah,20h,20h,20h,20h,20h
+    30 00000121 090A2020202020     
+    31 00000128 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    31 00000131 20202020202020     
+    32 00000138 202122232425262728-         db 20h,21h,22h,23h,24h,25h,26h,27h,28h,29h,2Ah,2Bh,2Ch,2Dh,2Eh,2Fh
+    32 00000141 292A2B2C2D2E2F     
+    33 00000148 303132333435363738-         db 30h,31h,32h,33h,34h,35h,36h,37h,38h,39h,3Ah,3Bh,3Ch,3Dh,3Eh,3Fh
+    33 00000151 393A3B3C3D3E3F     
+    34 00000158 404142434445464748-         db 40h,41h,42h,43h,44h,45h,46h,47h,48h,49h,4Ah,4Bh,4Ch,4Dh,4Eh,4Fh
+    34 00000161 494A4B4C4D4E4F     
+    35 00000168 505152535455565758-         db 50h,51h,52h,53h,54h,55h,56h,57h,58h,59h,5Ah,5Bh,5Ch,5Dh,5Eh,5Fh
+    35 00000171 595A5B5C5D5E5F     
+    36 00000178 606162636465666768-         db 60h,61h,62h,63h,64h,65h,66h,67h,68h,69h,6Ah,6Bh,6Ch,6Dh,6Eh,6Fh
+    36 00000181 696A6B6C6D6E6F     
+    37 00000188 707172737475767778-         db 70h,71h,72h,73h,74h,75h,76h,77h,78h,79h,7Ah,7Bh,7Ch,7Dh,7Eh,20h
+    37 00000191 797A7B7C7D7E20     
+    38 00000198 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    38 000001A1 20202020202020     
+    39 000001A8 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    39 000001B1 20202020202020     
+    40 000001B8 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    40 000001C1 20202020202020     
+    41 000001C8 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    41 000001D1 20202020202020     
+    42 000001D8 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    42 000001E1 20202020202020     
+    43 000001E8 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    43 000001F1 20202020202020     
+    44 000001F8 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    44 00000201 20202020202020     
+    45 00000208 202020202020202020-         db 20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h,20h
+    45 00000211 20202020202020     
+    46                                  
+    47                                  section .bss
+    48                                  
+    49                                      READLEN equ 1024            ;buffersize
+    50 00000000 <res 400h>              Buff: resb READLEN              ;reserve bytes 1024
+    51                                  
+    52                                  section .text
+    53                                  
+    54                                  global _start
+    55                                  
+    56                                  _start:
+    57                                  
+    58 00000000 90                          nop                         ;keep debugger happy
+    59                                  
+    60                                      ;Display "i'm working via stderr"
+    61 00000001 B804000000                  mov eax,4                   ;specify sys_write call
+    62 00000006 BB02000000                  mov ebx,2                   ;specify file descriptor 2,stderr
+    63 0000000B B9[00000000]                mov ecx,Statmsg             ;pass offset message to register
+    64 00000010 BA0F000000                  mov edx,Statlen             ;number of length to msg
+    65 00000015 CD80                        int 80h                     ;make sys_write call
+    66                                  
+    67                                      ;read buffer full of text from stdin
+    68                                  Read:
+    69 00000017 B803000000                  mov eax,3                   ;specify sys_read call
+    70 0000001C BB00000000                  mov ebx,0                   ;specify file descriptor 0,stdin
+    71 00000021 B9[00000000]                mov ecx,Buff                ;pass buffer address
+    72 00000026 BA00040000                  mov edx,READLEN             ;pass number of character to read
+    73 0000002B CD80                        int 80h                     ;make sys_read call
+    74                                  
+    75 0000002D 89C5                        mov ebp,eax                 ;copy read value for safekeeping
+    76 0000002F 83F800                      cmp eax,0                   ;if = 0 then it reached EOF
+    77 00000032 743A                        je Done                     ;finish the thing
+    78                                  
+    79                                      ;setup register for translation step
+    80 00000034 BB[18000000]                mov ebx,Upcase              ;place address to ebx
+    81 00000039 BA[00000000]                mov edx,Buff                ;put address of buffer to edx
+    82 0000003E 89E9                        mov ecx,ebp                 ;put number of bytes into the ecx
+    83                                  
+    84                                  Translate:
+    85 00000040 31C0                        xor eax,eax                 ;clear eax
+    86 00000042 678A040A                    mov al,byte[edx+ecx]        ;load character into al
+    87 00000046 678A80[18000000]            mov al,byte[Upcase+eax]     ;put translated character into al
+    88 0000004D D7                          xlat                        ;translate character in al via table(al + ebx)
+    89 0000004E 6788040A                    mov byte[edx+ecx],al       ;put back character after translation
+    90 00000052 FFC9                        dec ecx                     ;decrement the ecx
+    91 00000054 75EA                        jnz Translate               ;jump back till not 0
+    92                                  
+    93                                  Write:
+    94 00000056 B804000000                  mov eax,4                   ;specify sys_write call
+    95 0000005B BB01000000                  mov ebx,1                   ;specify file descriptor 1,stdout
+    96 00000060 B9[00000000]                mov ecx,Buff                ;put buffer address
+    97 00000065 BA00040000                  mov edx,READLEN             ;number of character to output
+    98 0000006A CD80                        int 80h                     ;make sys_write call
+    99 0000006C EBA9                        jmp Read                    ;jump back for next read
+   100                                  
+   101                                  Done:
+   102 0000006E B804000000                  mov eax,4                   ;specify sys_write call
+   103 00000073 BB02000000                  mov ebx,2                   ;specify file descriptor 2,stderr
+   104 00000078 B9[0F000000]                mov ecx,Donemsg             ;pass Donemsg address
+   105 0000007D BA09000000                  mov edx,Donelen             ;pass number of characters to print
+   106 00000082 CD80                        int 80h                     ;make sys_write call
+   107                                  
+   108                                      ;put an end to this
+   109 00000084 B801000000                  mov eax,1                   ;code for Exit syscall
+   110 00000089 BB00000000                  mov ebx,0                   ;return value 0
+   111 0000008E CD80                        int 80h                     ;exit call

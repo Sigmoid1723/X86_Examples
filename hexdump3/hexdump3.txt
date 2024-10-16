@@ -1,0 +1,13 @@
+ 68 65 78 64 75 6D 70 33 3A 20 68 65 78 64 75 6D|hexdump3: hexdum|
+ 70 33 2E 6F 20 74 65 78 74 6C 69 62 2E 6F 0A 09|p3.o textlib.o..|
+ 09 6C 64 20 2D 6F 20 68 65 78 64 75 6D 70 33 20|.ld -o hexdump3 |
+ 68 65 78 64 75 6D 70 33 2E 6F 20 2E 2F 74 65 78|hexdump3.o ./tex|
+ 38 36 0A 0A 68 65 78 64 75 6D 70 33 2E 6F 3A 20|86..hexdump3.o: |
+ 68 65 78 64 75 6D 70 33 2E 61 73 6D 0A 09 09 6E|hexdump3.asm...n|
+ 61 73 6D 20 2D 66 20 65 6C 66 20 2D 67 20 2D 46|asm -f elf -g -F|
+ 20 73 74 61 62 73 20 68 65 78 64 75 6D 70 33 2E| stabs hexdump3.|
+ 6C 73 74 0A 0A 74 65 78 74 6C 69 62 2E 6F 3A 20|lst..textlib.o: |
+ 74 65 78 74 6C 69 62 2E 61 73 6D 0A 09 09 6E 61|textlib.asm...na|
+ 73 6D 20 2D 66 20 65 6C 66 20 2D 67 20 2D 46 20|sm -f elf -g -F |
+ 73 74 61 62 73 20 74 65 78 74 6C 69 62 2E 61 73|stabs textlib.as|
+ 0A 0A 2D 6C 20 74 65 78 74 6C 69 62 2E 6C 73 74|..-l textlib.lst|

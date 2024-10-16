@@ -1,0 +1,36 @@
+     1                                  [Section .data]                 ;section containing itnitalized data
+     2                                  
+     3 00000000 656174206174206A6F-     EatMsg: db "eat at joe's!",0
+     3 00000009 6527732100         
+     4                                  
+     5                                  [Section .bss]                  ;section containing unitnitalized data
+     6                                  
+     7                                  [Section .text]                 ;section containing code
+     8                                  
+     9                                  extern puts                    ;simple "put string" routine form glibc
+    10                                  global main                    ;required linker to find entry point
+    11                                  
+    12                                  main:
+    13 00000000 55                          push ebp                    ;setup stack frame for debugger
+    14 00000001 89E5                        mov ebp,esp
+    15 00000003 53                          push ebx                    ;preserve ebx,ebp,esi,edi
+    16 00000004 56                          push esi
+    17 00000005 57                          push edi
+    18                                  
+    19                                      ;boiler plate for calling c functions above
+    20                                  
+    21 00000006 68[00000000]                push EatMsg                 ;put address of the message on the stack
+    22 0000000B E8(00000000)                call puts                   ;call glibc function for displaying strings
+    23 00000010 83C404                      add esp,4                   ;clean stack by 4 bytes adjusting esp, since i push message after calling it i remove from stack to clean up for other values
+    24                                  
+    25                                      ;boiler plate for calling c functions above
+    26 00000013 5F                          pop edi                     ;restore saved registers
+    27 00000014 5E                          pop esi
+    28 00000015 5B                          pop ebx
+    29 00000016 89EC                        mov esp,ebp                 ;destroy stack frame by returning initial address for stack
+    30 00000018 5D                          pop ebp                     ;move esp after poping ebp so it points to the above code block
+    31 00000019 C3                          ret                         ;return to linux
+    32                                      
+    33                                  
+    34                                      
+    35                                      

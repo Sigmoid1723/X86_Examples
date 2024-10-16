@@ -1,0 +1,81 @@
+     1                                  section .data
+     2                                  
+     3                                      ; WordString: dw 'CQ'
+     4                                      ; DoubleString: dd 'Stop'
+     5 00000000 616263646566676869-         Editbuff dq 'abcdefghijklm            q'
+     5 00000009 6A6B6C6D2020202020-
+     5 00000012 202020202020207100-
+     5 0000001B 0000000000         
+     6                                      Editbufflen equ $-Editbuff
+     7                                      ENDPOS equ 12
+     8                                      INSERTPOS equ 5
+     9                                      
+    10                                      
+    11                                  section .text
+    12                                  
+    13                                      global _start
+    14                                  
+    15                                  _start:
+    16 00000000 90                          nop
+    17                                      ;; put experiment between two nops
+    18                                      ;; mov ax,067FEh
+    19                                      ;; mov bx,ax
+    20                                      ;; mov cl,bh
+    21                                      ;; mov ch,bl
+    22                                      ;; xchg cl,ch
+    23                                      ;; mov eax,0ffffffffh
+    24                                      ;; mov ebx,02dh
+    25                                      ;; dec ebx
+    26                                      ;; inc eax
+    27                                      ; mov eax,5
+    28                                  ; DoMore: dec eax
+    29                                  ;     ; jnz DoMore
+    30                                      ;     Jmp DoMore
+    31                                      ; mov eax,42
+    32                                      ; neg eax
+    33                                      ; add eax,42
+    34                                      ; mov eax,07FFFFFFFh
+    35                                      ; inc eax
+    36                                      ; mov ax,-42
+    37                                      ; mov ebx,eax
+    38                                      ; mov ax,-42
+    39                                      ; movsx ebx,ax
+    40                                      ; mov eax,447
+    41                                      ; mov ebx,1739
+    42                                      ; mul ebx
+    43                                      ; mov eax,0FFFFFFFFh
+    44                                      ; mov ebx,03B72h
+    45                                      ; mul ebx
+    46                                      ; mov eax,WordString
+    47                                      ; mov edx,DoubleString
+    48                                      ; mov al,byte[UpCase+eax]
+    49                                  
+    50                                      ; std                         ;down memory transfer
+    51                                      ; mov ebx,Editbuff+INSERTPOS  ;save address of insert position
+    52                                      ; mov esi,ENDPOS+Editbuff     ;start at end of text
+    53                                      ; mov edi,Editbuff+ENDPOS+1   ;bump text right by 1
+    54                                      ; mov ecx,ENDPOS-INSERTPOS+1  ;count for execution
+    55                                      ; rep movsb                   ;move'em
+    56                                      ; mov byte [ebx],' '          ;write a space at insert position
+    57                                  
+    58                                      ; stc
+    59                                      ; mov eax,8h
+    60                                      ; adc eax,2h
+    61                                  
+    62                                      ; mov ax,1
+    63                                      ; db 0c1h,0e0h,001h
+    64                                      ; mov dx,ax
+    65                                  
+    66 00000001 B804000000                  mov eax,4                   ;sys_write
+    67 00000006 BB01000000                  mov ebx,1                   ;stdout
+    68 0000000B B9[00000000]                mov ecx,Editbuff            ;pass address
+    69 00000010 BA20000000                  mov edx,Editbufflen         ;pass length
+    70 00000015 CD80                        int 80h                     ;kernel call
+    71                                  
+    72 00000017 B801000000                  mov eax,1                       ;sys_exit
+    73 0000001C BB00000000                  mov ebx,0                       ;return 0
+    74 00000021 CD80                        int 80h                     ;kernel call
+    75                                      ;; put experiment between two nops
+    76 00000023 90                          nop
+    77                                  
+    78                                  section .bss

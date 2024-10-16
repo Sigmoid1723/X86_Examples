@@ -1,0 +1,84 @@
+     1                                  ;  Executable name : SHOWENV2
+     2                                  ;  Version         : 1.0
+     3                                  ;  Created date    : 5/21/2009
+     4                                  ;  Last update     : 5/21/2009
+     5                                  ;  Author          : Jeff Duntemann
+     6                                  ;  Description     : A simple program in assembly for Linux, using NASM 2.05,
+     7                                  ;    demonstrating the way to access Linux environment variables on the stack.
+     8                                  ;    This version accesses the stack "nondestructively" by using memory
+     9                                  ;    references rather than POP instructions.
+    10                                  ;
+    11                                  ;  Build using these commands:
+    12                                  ;    nasm -f elf -g -F stabs showenv2.asm
+    13                                  ;    ld -o showenv2 showenv2.o
+    14                                  ;
+    15                                  
+    16                                  SECTION .data			; Section containing initialised data
+    17                                  
+    18 00000000 5465726D696E617465-     	ErrMsg db "Terminated with error.",10
+    18 00000009 642077697468206572-
+    18 00000012 726F722E0A         
+    19                                  	ERRLEN equ $-ErrMsg
+    20                                  	
+    21                                  SECTION .bss			; Section containing uninitialized data	
+    22                                  	MAXVARS	 equ 300
+    23 00000000 <res 4B0h>              	VarLens: resd MAXVARS	; Table of argument lengths
+    24                                  
+    25                                  SECTION .text			; Section containing code
+    26                                  
+    27                                  global 	_start			; Linker needs this to find the entry point!
+    28                                  	
+    29                                  _start:
+    30 00000000 90                      	nop			; This no-op keeps gdb happy...
+    31                                  
+    32 00000001 89E5                    	mov ebp,esp		; Save the initial stack pointer in EBP
+    33 00000003 31C0                    	xor eax,eax		; Searching for 0, so clear EAX to 0
+    34                                  FindEnv:
+    35 00000005 B9FFFF0000              	mov ecx,0000ffffh	; Limit search to 65535 bytes max
+    36 0000000A 89EF                    	mov edi,ebp 		; Put address of string to search in EDI
+    37 0000000C 89FA                    	mov edx,edi		; Copy starting address into EDX                                                                                                                                                                                                                                                                                                             
+    38 0000000E FC                      	cld			; Set search direction to up-memory
+    39 0000000F F2AF                    	repne scasd		; Search for null ptr in string at edi
+    40 00000011 754C                    	jnz Error		; REPNE SCASB ended without finding AL
+    41 00000013 89FD                    	mov ebp,edi		; Env var addrs begin after null ptr
+    42 00000015 31DB                    	xor ebx,ebx		; Zero EBX for use as addr counter
+    43                                  
+    44                                  ; We now have the address of the first env var address in EBP. Now we scan
+    45                                  ; through them and determine their lengths:
+    46                                  ScanOne:
+    47 00000017 B9FFFF0000              	mov ecx,0000ffffh	; Limit search to 65535 bytes max
+    48 0000001C 8B7C9D00                	mov edi,dword [ebp+ebx*4] ; Put address of string to search in EDI
+    49 00000020 83FF00                  	cmp edi,0		; See if we hit the second null ptr
+    50 00000023 7419                    	je Showem		; If so, we've scanned em all, so show 'em
+    51 00000025 89FA                    	mov edx,edi		; Copy starting address into EDX                                                                                                                                                                                                                                                                                                             
+    52 00000027 FC                      	cld			; Set search direction to up-memory
+    53 00000028 F2AE                    	repne scasb		; Search for null (0 char) in string at edi
+    54 0000002A 7533                    	jnz Error		; REPNE SCASB ended without finding AL
+    55 0000002C C647FF0A                	mov byte [edi-1],10	; Store an EOL where the null used to be
+    56 00000030 29D7                    	sub edi,edx		; Subtract position of 0 from start address
+    57 00000032 893C9D[00000000]        	mov dword [VarLens+ebx*4],edi	; Put length of var into table
+    58 00000039 43                      	inc ebx			; Add 1 to environment variable counter
+    59 0000003A EBDB                    	jmp ScanOne		; If not, loop back and do another one
+    60                                  
+    61                                  ; Display all environment variables to stdout:
+    62 0000003C 31F6                    	xor esi,esi		; Start (argumentsfor table addressing reasons) at 0
+    63                                  Showem:
+    64 0000003E 8B4CB500                	mov ecx,[ebp+esi*4]	; Pass offset of the environment var
+    65 00000042 B804000000              	mov eax,4		; Specify sys_write call
+    66 00000047 BB01000000              	mov ebx,1		; Specify File Descriptor 1: Standard Output
+    67 0000004C 8B14B5[00000000]        	mov edx,[VarLens+esi*4]	; Pass the length of the message
+    68 00000053 CD80                    	int 80H			; Make kernel call
+    69 00000055 46                      	inc esi			; Increment the env var counter
+    70 00000056 837CB50000              	cmp dword [ebp+esi*4],0	; See if we've displayed all the variables
+    71 0000005B 75E1                    	jne Showem		; If not, loop back and do another
+    72 0000005D EB16                    	jmp Exit		; We're done! Let's pack it in!
+    73                                  
+    74 0000005F B804000000              Error: 	mov eax,4		; Specify sys_write call
+    75 00000064 BB01000000              	mov ebx,1		; Specify File Descriptor 2: Standard Error
+    76 00000069 B9[00000000]            	mov ecx,ErrMsg		; Pass offset of the error message
+    77 0000006E BA17000000              	mov edx,ERRLEN		; Pass the length of the message
+    78 00000073 CD80                    	int 80H			; Make kernel call
+    79                                  
+    80 00000075 B801000000              Exit:	mov eax,1		; Code for Exit Syscall
+    81 0000007A BB00000000              	mov ebx,0		; Return a code of zero	
+    82 0000007F CD80                    	int 80H			; Make kernel call

@@ -1,0 +1,40 @@
+     1                                  section .bss
+     2 00000000 ??                          Buff resb 1
+     3                                  
+     4                                  section .data
+     5                                  
+     6                                  section .text
+     7                                  global _start
+     8                                  
+     9                                  _start:
+    10 00000000 90                          nop                         ;for debugger
+    11 00000001 B803000000              Read: mov eax,3                 ;specify sys_read call
+    12 00000006 BB00000000                  mov ebx,0                   ;specify file descripter 0, stdin
+    13 0000000B B9[00000000]                mov ecx,Buff                ;pass Buff address to ecx
+    14 00000010 BA01000000                  mov edx,1                   ;tell sys_read to read one character from stdin
+    15 00000015 CD80                        int 80h                     ;call sys_read
+    16                                  
+    17 00000017 83F800                      cmp eax,0                   ;compare sys_read return value
+    18 0000001A 7434                        je Exit                     ;jump to exit if equal to 0
+    19                                      ;fall thourgh next instruction
+    20                                  
+    21 0000001C 803C25[00000000]61          cmp byte [Buff],61h         ;test input character against lowercase 'a'
+    22 00000024 7212                        jb Write                    ;If below than 'a' then not lowercase
+    23 00000026 803C25[00000000]7A          cmp byte [Buff],7ah         ;test input character against lowercase 'z'
+    24 0000002E 7708                        ja Write                    ;If above than 'z' then not lowercase
+    25                                      ;we have lowercase character only now
+    26                                  
+    27 00000030 802C25[00000000]20          sub byte [Buff],20h         ;substaract 20h from buff character
+    28                                      ;write out to stdout now
+    29                                  
+    30 00000038 B804000000              Write: mov eax,4                ;specify sys_write call
+    31 0000003D BB01000000                  mov ebx,1                   ;specify file decripter 1, stdout
+    32 00000042 B9[00000000]                mov ecx,Buff                ;pass address of character to write
+    33 00000047 BA01000000                  mov edx,1                   ;pass number of characters to write
+    34 0000004C CD80                        int 80h                     ;call sys_write
+    35 0000004E EBB1                        jmp Read                    ;jump to Read to read another character
+    36                                  
+    37 00000050 B801000000              Exit:mov eax,1                  ;specify sys_exit call
+    38 00000055 BB00000000                  mov ebx,0                   ;specify return value 0
+    39 0000005A CD80                        int 80h                     ;call sys_exit
+    40                                      

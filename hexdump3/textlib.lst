@@ -1,0 +1,184 @@
+     1                                  section .bss
+     2                                  
+     3                                      BUFFLEN equ 10              ;16 len buffer
+     4 00000000 <res Ah>                Buff: resb BUFFLEN              ;text buffer
+     5                                  
+     6                                  section .data
+     7                                  
+     8 00000000 203030203030203030-     Dumplin: db " 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
+     8 00000009 203030203030203030-
+     8 00000012 203030203030203030-
+     8 0000001B 203030203030203030-
+     8 00000024 203030203030203030-
+     8 0000002D 203030             
+     9                                      DUMPLEN equ $-Dumplin
+    10                                      
+    11 00000030 7C2E2E2E2E2E2E2E2E-     Asclin: db "|................|",10
+    11 00000039 2E2E2E2E2E2E2E2E7C-
+    11 00000042 0A                 
+    12                                      ASCLEN equ $-Asclin
+    13                                      FULLLEN EQU $-Dumplin
+    14                                      
+    15 00000043 303132333435363738-     Hexdigits: db "0123456789ABCDEF"
+    15 0000004C 39414243444546     
+    16                                  
+    17                                  Bindigits:
+    18 00000053 303030303030303130-         db "0000","0001","0010","0011"
+    18 0000005C 30313030303131     
+    19 00000063 303130303031303130-         db "0100","0101","0110","0111"
+    19 0000006C 31313030313131     
+    20 00000073 313030303130303131-         db "1000","1001","1010","1011"
+    20 0000007C 30313031303131     
+    21 00000083 313130303131303131-         db "1100","1101","1110","1111"
+    21 0000008C 31313031313131     
+    22                                  
+    23                                      ;character for ascill presentation where other unwanted character set to '.'
+    24                                      
+    25                                  DOTXLAT:
+    26 00000093 2E2E2E2E2E2E2E2E2E-         db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    26 0000009C 2E2E2E2E2E2E2E     
+    27 000000A3 2E2E2E2E2E2E2E2E2E-         db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    27 000000AC 2E2E2E2E2E2E2E     
+    28 000000B3 202122232425262728-         db 20h,21h,22h,23h,24h,25h,26h,27h,28h,29h,2Ah,2Bh,2Ch,2Dh,2Eh,2Fh
+    28 000000BC 292A2B2C2D2E2F     
+    29 000000C3 303132333435363738-         db 30h,31h,32h,33h,34h,35h,36h,37h,38h,39h,3Ah,3Bh,3Ch,3Dh,3Eh,3Fh
+    29 000000CC 393A3B3C3D3E3F     
+    30 000000D3 404142434445464748-         db 40h,41h,42h,43h,44h,45h,46h,47h,48h,49h,4Ah,4Bh,4Ch,4Dh,4Eh,4Fh
+    30 000000DC 494A4B4C4D4E4F     
+    31 000000E3 505152535455565758-         db 50h,51h,52h,53h,54h,55h,56h,57h,58h,59h,5Ah,5Bh,5Ch,5Dh,5Eh,5Fh
+    31 000000EC 595A5B5C5D5E5F     
+    32 000000F3 606162636465666768-         db 60h,61h,62h,63h,64h,65h,66h,67h,68h,69h,6Ah,6Bh,6Ch,6Dh,6Eh,6Fh
+    32 000000FC 696A6B6C6D6E6F     
+    33 00000103 707172737475767778-         db 70h,71h,72h,73h,74h,75h,76h,77h,78h,79h,7Ah,7Bh,7Ch,7Dh,7Eh,2Eh
+    33 0000010C 797A7B7C7D7E2E     
+    34 00000113 2E2E2E2E2E2E2E2E2E-         db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    34 0000011C 2E2E2E2E2E2E2E     
+    35 00000123 2E2E2E2E2E2E2E2E2E-         db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    35 0000012C 2E2E2E2E2E2E2E     
+    36 00000133 2E2E2E2E2E2E2E2E2E-         db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    36 0000013C 2E2E2E2E2E2E2E     
+    37 00000143 2E2E2E2E2E2E2E2E2E-         db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    37 0000014C 2E2E2E2E2E2E2E     
+    38 00000153 2E2E2E2E2E2E2E2E2E-         db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    38 0000015C 2E2E2E2E2E2E2E     
+    39 00000163 2E2E2E2E2E2E2E2E2E-         db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    39 0000016C 2E2E2E2E2E2E2E     
+    40 00000173 2E2E2E2E2E2E2E2E2E-         db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    40 0000017C 2E2E2E2E2E2E2E     
+    41 00000183 2E2E2E2E2E2E2E2E2E-         db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    41 0000018C 2E2E2E2E2E2E2E     
+    42                                  
+    43                                  section .text
+    44                                  
+    45                                  GLOBAL Clearline, DumpChar, Newlines, Printline ;procedure
+    46                                  GLOBAL Dumplin,Hexdigits,Bindigits              ;dataitem
+    47                                  
+    48                                      ;-------------------------------------------------------------------------
+    49                                      ; ClearLine: Clear a hex dump line string to 16 0 values
+    50                                      ; UPDATED: 25/06/2023
+    51                                      ; IN:Nothing
+    52                                      ; RETURNS: Nothing
+    53                                      ; MODIFIES: Nothing
+    54                                      ; CALLS:DumpChar
+    55                                      ; DESCRIPTION: The hex dump line string is cleared to binary 0 by
+    56                                      ; calling DumpChar 16 times, passing it 0 each time.
+    57                                  
+    58                                  Clearline:
+    59 00000000 60                          pushad                      ;save all caller's GP register
+    60 00000001 BA0F000000                  mov edx,15                  ;16 pokes counting from 0
+    61                                  
+    62                                  .poke:
+    63 00000006 B800000000                  mov eax,0                   ;tell dump character to poke at 0
+    64 0000000B E807000000                  call DumpChar               ;instert '0' into hexdump string
+    65 00000010 83EA01                      sub edx,1                   ;decrement doesn't set CF
+    66 00000013 73F1                        jae .poke                   ;loop back till edx >= 0
+    67 00000015 61                          popad                       ;restore all character GP register
+    68 00000016 C3                          ret                         ;go home
+    69                                  
+    70                                      ;-------------------------------------------------------------------------
+    71                                      ; DumpChar:"Poke" a value into the hex dump line string.
+    72                                      ; UPDATED:25/06/2023
+    73                                      ; IN:Pass the 8-bit value to be poked in EAX.
+    74                                      ; Pass the value’s position in the line (0-15) in EDX
+    75                                      ; RETURNS:Nothing
+    76                                      ; MODIFIES:EAX, ASCLin, DumpLin
+    77                                      ; CALLS:Nothing
+    78                                      ; DESCRIPTION: The value passed in EAX will be put in both the hex dump
+    79                                      ; portion and in the ASCII portion, at the position passed
+    80                                      ; in EDX, represented by a space where it is not a
+    81                                      ; printable character.
+    82                                  
+    83                                  DumpChar:
+    84 00000017 53                          push ebx                    ;save caller's ebx
+    85 00000018 57                          push edi                    ;save caller's edi
+    86                                  
+    87                                      ;insert the ascii portion of the dump line
+    88 00000019 8A98[93000000]              mov bl,byte[DOTXLAT+eax]    ;translate non printable to '.'
+    89 0000001F 889A[31000000]              mov byte[Asclin+edx+1],bl   ;write to ascii portion
+    90                                  
+    91                                      ;insert hex equivalent of input to hexportion
+    92 00000025 89C3                        mov ebx,eax                 ;save second copy of input characters
+    93 00000027 8D3C52                      lea edi,[edx*2+edx]         ;multiply offset by 3
+    94                                  
+    95                                      ;lookup low nybble character and instert into string
+    96 0000002A 83E00F                      and eax,0000000fh           ;mask out all low nybble
+    97 0000002D 8A80[43000000]              mov al,byte[Hexdigits+eax]  ;look up character equivalent to string
+    98 00000033 8887[02000000]              mov byte[Dumplin+edi+2],al  ;write chracter equivalent to line string
+    99                                  
+   100                                      ;lookup high nybble character and instert into string
+   101 00000039 81E3F0000000                and ebx,000000f0h           ;mask out all but high nybble
+   102 0000003F C1EB04                      shr ebx,4                   ;shift high  4 bites to low 4 bits
+   103 00000042 8A9B[43000000]              mov bl,byte[Hexdigits+ebx]  ;look up character equivalent to string
+   104 00000048 889F[01000000]              mov byte[Dumplin+edi+1],bl  ;write chracter equivalent to line string
+   105                                  
+   106                                      ;Done go home
+   107 0000004E 5F                          pop edi                     ;Restore caller's edi
+   108 0000004F 5B                          pop ebx                     ;Restore caller's ebx
+   109 00000050 C3                          ret                         ;return to caller
+   110                                  
+   111                                      ;-------------------------------------------------------------------------
+   112                                      ; Newlines:Sends between 1 and 15 newlines to the Linux console
+   113                                      ; UPDATED:25/06/2023
+   114                                      ; IN:# of newlines to send, from 1 to 15
+   115                                      ; RETURNS:Nothing
+   116                                      ; MODIFIES:Nothing
+   117                                      ; CALLS:Kernel sys_write
+   118                                      ; DESCRIPTION: The number of newline chareacters (0Ah) specified in EDX
+   119                                      ; is sent to stdout using using INT 80h sys_write. This
+   120                                      ; procedure demonstrates placing constant data in the
+   121                                      ; procedure definition itself, rather than in the .data or
+   122                                      ; .bss sections.
+   123                                  
+   124                                  Newlines:
+   125 00000051 60                          pushad                      ;save all caller's register
+   126 00000052 83FA0F                      cmp edx,15                  ;make sure caller didn't asked for more then 15
+   127 00000055 7711                        ja .exit                    ;if so exit without doing anything
+   128 00000057 B9[6A000000]                mov ecx,EOLs                ;put address of EOLs into ecx
+   129 0000005C B804000000                  mov eax,4                   ;specify sys_write call
+   130 00000061 BB01000000                  mov ebx,1                   ;specify file discriptor 1,stdout
+   131 00000066 CD80                        int 80h                     ;call kernel
+   132 00000068 61                      .exit: popad                    ;restore all character to registers
+   133 00000069 C3                          ret                         ;return to caller
+   134 0000006A 0A0A0A0A0A0A0A0A0A-     EOLs: db 10,10,10,10,10,10,10,10,10,10,10,10,10,10,10
+   134 00000073 0A0A0A0A0A0A       
+   135                                  
+   136                                      ;-------------------------------------------------------------------------
+   137                                      ; PrintLine:Displays DumpLin to stdout
+   138                                      ; UPDATED:25/06/2023
+   139                                      ; IN:Nothing
+   140                                      ; RETURNS:Nothing
+   141                                      ; MODIFIES:Nothing
+   142                                      ; CALLS:Kernel sys_write
+   143                                      ; DESCRIPTION: The hex dump line string DumpLin is displayed to stdout
+   144                                      ; using INT 80h sys_write. All GP registers are preserved.
+   145                                      
+   146                                  Printline:
+   147 00000079 60                          pushad                      ;save all GP register
+   148 0000007A B804000000                  mov eax,4                   ;specify sys_write call
+   149 0000007F BB01000000                  mov ebx,1                   ;specify file descriptor 1, stdout
+   150 00000084 B9[00000000]                mov ecx,Dumplin             ;pass address to ecx
+   151 00000089 BA43000000                  mov edx,FULLLEN             ;size of line string
+   152 0000008E CD80                        int 80h                     ;call sys_write
+   153 00000090 61                          popad                       ;restore all GP register
+   154 00000091 C3                          ret                         ;return to caller
+   155                                  

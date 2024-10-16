@@ -1,0 +1,279 @@
+     1                                  [section .data]
+     2                                  
+     3 00000000 4572726F723A20506C-         ErrorNonum db "Error: Please Enter the valid number after ./textfile2",10,0
+     3 00000009 6561736520456E7465-
+     3 00000012 72207468652076616C-
+     3 0000001B 6964206E756D626572-
+     3 00000024 206166746572202E2F-
+     3 0000002D 7465787466696C6532-
+     3 00000036 0A00               
+     4 00000038 55736167653A202E2F-         ErrorMsg db "Usage: ./textfile2 <number> <string1> <string2> .....",10,0
+     4 00000041 7465787466696C6532-
+     4 0000004A 203C6E756D6265723E-
+     4 00000053 203C737472696E6731-
+     4 0000005C 3E203C737472696E67-
+     4 00000065 323E202E2E2E2E2E0A-
+     4 0000006E 00                 
+     5 0000006F 2D3031323334353637-         Charstring db "-0123456789qwertuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM@"
+     5 00000078 383971776572747569-
+     5 00000081 6F706173646667686A-
+     5 0000008A 6B6C7A786376626E6D-
+     5 00000093 51574552545955494F-
+     5 0000009C 504153444647484A4B-
+     5 000000A5 4C5A584356424E4D40 
+     6 000000AE 7465787466696C652E-         fname db "textfile.txt ",0
+     6 000000B7 7478742000         
+     7 000000BC 7700                        Writecode db "w",0
+     8 000000BE 4572726F723A206669-         ErrorFileText db "Error: file %s cannot be opened.",10,0
+     8 000000C7 6C652025732063616E-
+     8 000000D0 6E6F74206265206F70-
+     8 000000D9 656E65642E0A00     
+     9 000000E0 25730A00                    SuperString db "%s",10,0
+    10 000000E4 5468652066696C6520-         GenerateString db "The file %shas been generated containing %s lines.",10,0
+    10 000000ED 257368617320626565-
+    10 000000F6 6E2067656E65726174-
+    10 000000FF 656420636F6E746169-
+    10 00000108 6E696E67202573206C-
+    10 00000111 696E65732E0A00     
+    11                                      
+    12                                  [section .bss]
+    13                                  
+    14 00000000 ????????                    Linecount resb 4            ;linecount bytes
+    15                                      MAXCHAR equ 70+2             ;number of character we want to show + EOL + 0
+    16 00000004 <res 48h>                   Randbuff resb MAXCHAR
+    17                                      BUFFLEN equ $-Randbuff
+    18                                  
+    19                                  [section .text]
+    20                                  
+    21                                  extern fprintf
+    22                                  extern sprintf
+    23                                  extern fopen
+    24                                  extern fclose
+    25                                  extern time
+    26                                  extern srand
+    27                                  extern rand
+    28                                  extern printf
+    29                                  global main
+    30                                  
+    31                                  ;;random character string
+    32                                      
+    33                                  RCS:
+    34                                  ;;get the seed
+    35 00000000 6A00                        push dword 0                ;pass null pointer
+    36 00000002 E8(00000000)                call time                   ;call time function
+    37 00000007 83C404                      add esp,4                   ;clear stack
+    38                                  
+    39 0000000A 50                          push eax                    ;push seed
+    40 0000000B E8(00000000)                call srand                  ;call srand function
+    41 00000010 83C404                      add esp,4                   ;clear stack
+    42                                  
+    43 00000013 B900000000                  mov ecx,0                   ;number of character count
+    44                                  .again:
+    45 00000018 51                          push ecx                    ;just incase
+    46 00000019 E8(00000000)                call rand                   ;call rand function
+    47 0000001E 59                          pop ecx                     ;get back
+    48                                  
+    49 0000001F 83E03F                      and eax,003fh                ;get last six bits
+    50 00000022 8A98[6F000000]              mov bl,byte[eax+Charstring] ;get that random chracter in bl
+    51 00000028 8899[04000000]              mov [Randbuff+ecx],bl       ;get that value in buffer
+    52 0000002E 41                          inc ecx
+    53 0000002F 83F946                      cmp ecx,MAXCHAR-2           ;compare value
+    54 00000032 75E4                        jnz .again                   ;if not last go again
+    55                                      ; mov byte[Randbuff+ecx],10   ;feed EOL and fall through
+    56                                      ; inc ecx
+    57 00000034 C681[04000000]00            mov byte[Randbuff+ecx],0    ;Null terminate just in case
+    58                                  
+    59                                      ;check the random generated string via printf
+    60                                      ; push Randbuff               ;get buffer address
+    61                                      ; call printf                 ;call printf fucntion
+    62                                      ; add esp,4                   ;clear stack
+    63                                  
+    64 0000003B 8B7D08                      mov edi,[ebp+8]             ;save arg count
+    65 0000003E 8B750C                      mov esi,[ebp+12]            ;save arg
+    66 00000041 EB4A                        jmp Numtest1                ;check method
+    67                                  
+    68                                      ;file opening procedure
+    69                                  Openfiles:
+    70 00000043 68[BC000000]                push dword Writecode              ;push 'w' for writing file
+    71 00000048 68[AE000000]                push dword fname                    ;file string
+    72                                      ; mov ecx,fname            ;pass string to eax
+    73                                      ; mov edx,Writecode           ;write mode
+    74 0000004D E8(00000000)                call fopen                  ;call fopen function
+    75 00000052 83C408                      add esp,8                   ;clear stack
+    76 00000055 89C3                        mov ebx,eax                 ;it contain file handle save it in ebx
+    77                                  
+    78                                      ; cmp eax,0                   ;it will return null if its failed
+    79                                      ; jz ErrorFile                ;jump to error file section
+    80 00000057 C3                          ret                         ;return
+    81                                  
+    82                                      ;display buffer string in each lines
+    83                                  linesBuffer:
+    84 00000058 E8E6FFFFFF                  call  Openfiles              ;open the files
+    85                                      ; mov ebx,fname                ;lets go
+    86 0000005D BE[04000000]                mov esi,Randbuff
+    87                                      ; push Randbuff               ;push random string
+    88 00000062 56                          push esi                ;push that buffer
+    89 00000063 68[E0000000]                push SuperString            ;push that string
+    90 00000068 53                          push ebx                    ;mention file handle that you want to push
+    91 00000069 8B3D[00000000]              mov edi,[Linecount]
+    92                                  writeline:
+    93 0000006F 83FF00                      cmp edi,0      ;compare till number of line is 0
+    94 00000072 7408                        je donewrite             ;loop back
+    95 00000074 E8(00000000)                call fprintf                ;call fprintf
+    96 00000079 4F                          dec edi        ;decrement ebx number
+    97 0000007A EBF3                        jmp writeline
+    98                                  donewrite:
+    99 0000007C 83C40C                      add esp,12                   ;clear stack
+   100                                      
+   101 0000007F 53                          push ebx                    ;mention file
+   102 00000080 E8(00000000)                call fclose                 ;close file
+   103 00000085 83C404                      add esp,4                   ;clear stack
+   104 00000088 E910010000                  jmp Generated                 ;go back
+   105                                  ;;test the number
+   106                                      
+   107                                  Numtest1:                       ;check method 1(not great since we need to convert string into number as well
+   108 0000008D 8B4604                      mov eax,[esi+4]             ;get the 2 arg in ebx
+   109 00000090 8B00                        mov eax,dword[eax]          ;lol
+   110 00000092 31D2                        xor edx,edx                 ;clean this al well
+   111                                  .addanother:
+   112 00000094 3C00                        cmp al,0                    ;check the bit if its 0
+   113 00000096 740A                        je .clean
+   114 00000098 C1E208                      shl edx,8                   ;shift left reverse order
+   115 0000009B 00C2                        add dl,al                   ;add that to dl
+   116 0000009D C1E808                      shr eax,8                   ;shift right for other bits
+   117 000000A0 EBF2                        jmp .addanother              ;go loop
+   118                                  .clean:
+   119 000000A2 31DB                        xor ebx,ebx                 ;clear buffer register
+   120 000000A4 31C0                        xor eax,eax                 ;clear eax
+   121 000000A6 31C9                        xor ecx,ecx                 ;clear count
+   122                                  .loopn:
+   123 000000A8 80FA30                      cmp dl,30h                  ;check if it is less than '0' ascii
+   124 000000AB 727C                        jb ENonum                   ;if it is jump to error
+   125 000000AD 80FA39                      cmp dl,39h                  ;if it is more than '9' ascii
+   126 000000B0 7777                        ja ENonum                   ;if it is jump to error
+   127 000000B2 80EA30                      sub dl,30h                  ;sub that
+   128 000000B5 88CD                        mov ch,cl                   ;ch for multipling 10 how many times if cl 2 than multiply twice by 10
+   129 000000B7 80F901                      cmp cl,1                    ;if more than 1
+   130 000000BA 7304                        jae .ahead
+   131 000000BC 88D3                        mov bl,dl                   ;other wise just add
+   132 000000BE EB0B                        jmp .next1
+   133                                  .ahead:
+   134 000000C0 88D0                        mov al,dl                   ;move for multiply
+   135                                  .Aloop:
+   136 000000C2 6BC00A                      imul eax,10                 ;multiply by 10
+   137 000000C5 FECD                        dec ch                      ;dec loop we want to multiply
+   138 000000C7 75F9                        jne .Aloop                   ;again loop
+   139 000000C9 00C3                        add bl,al                   ;get that value
+   140                                  .next1:
+   141 000000CB FEC1                        inc cl
+   142 000000CD C1EA08                      shr edx,8                   ;check for next number
+   143                                      
+   144 000000D0 75D6                        jnz .loopn                   ;if it not jump to loop
+   145                                  .finish:
+   146 000000D2 891D[00000000]              mov dword[Linecount],ebx      ;move that to line count
+   147 000000D8 83FF02                      cmp edi,2                   ;if exactly two count then printf form buffer
+   148 000000DB 0F8477FFFFFF                je linesBuffer              ;then go to buffer
+   149                                  
+   150                                      ;else we get args from terminal
+   151                                  PrintArgument:
+   152 000000E1 8B7D08                      mov edi,[ebp+8]             ;save argcount
+   153 000000E4 8B750C                      mov esi,[ebp+12]            ;get the 3rd argument
+   154 000000E7 83EF03                      sub edi,3                   ;see number of argument more than 3
+   155 000000EA 31C0                        xor eax,eax                 ;clear eax
+   156 000000EC 8B7608                      mov esi,[esi+8]       ;get that value
+   157 000000EF BB[04000000]                mov ebx,Randbuff            ;put that random buffer
+   158 000000F4 56                          push esi
+   159 000000F5 68[E0000000]                push SuperString
+   160 000000FA 53                          push ebx                    ;push that buffer where we store value
+   161 000000FB 31DB                        xor ebx,ebx                 ;clear this
+   162                                  .anotherarg:
+   163                                      
+   164 000000FD E8(00000000)                call sprintf                ;call sprintf
+   165 00000102 01C3                        add ebx,eax
+   166                                  
+   167 00000104 83FF00                      cmp edi,0                   ;check if it reach 0 then go ahead
+   168 00000107 7411                        jz .appendzero
+   169 00000109 C683[03000000]20            mov byte[Randbuff+ebx-1],20h ;other wise append space
+   170 00000110 4F                          dec edi
+   171 00000111 010424                      add [esp],eax                 ;check for now
+   172 00000114 01442408                    add [esp+8],eax                 ;check for now
+   173 00000118 EBE3                        jmp .anotherarg
+   174                                  .appendzero:
+   175 0000011A 83C40C                      add esp,12                  ;clear stack
+   176 0000011D C683[03000000]00            mov byte[Randbuff+ebx-1],0 ;append 0    
+   177                                  .cont:
+   178 00000124 E92FFFFFFF                  jmp linesBuffer             ;time to print this
+   179                                      
+   180                                  ;;error if not number
+   181                                  ENonum:
+   182 00000129 80FA00                      cmp dl,0                   ;if number is 0
+   183 0000012C 74A4                        je Numtest1.finish                   ;go back
+   184 0000012E 68[00000000]                push ErrorNonum             ;push error messag string
+   185 00000133 E8(00000000)                call printf                 ;call printf
+   186 00000138 83C404                      add esp,4                   ;clear stack
+   187 0000013B 68[38000000]                push ErrorMsg               ;push error message string
+   188 00000140 E8(00000000)                call printf                 ;call printf
+   189 00000145 83C404                      add esp,4                   ;clear stack
+   190 00000148 EB6C                        jmp BoilerB                 ;jump to the end
+   191                                  
+   192                                  ;;error usage message
+   193                                  Error:
+   194 0000014A 68[38000000]                push ErrorMsg               ;push error message string
+   195 0000014F E8(00000000)                call printf                 ;call printf function
+   196 00000154 83C404                      add esp,4                   ;clear stack
+   197 00000157 EB5D                        jmp BoilerB                 ;jump to the end
+   198                                  
+   199                                  ;;error file open message
+   200                                  ErrorFile:
+   201                                      ; push ebx
+   202                                      ; call fclose
+   203                                      ; add esp,4                   ;clear stack
+   204                                  
+   205 00000159 B8[AE000000]                mov eax,fname
+   206 0000015E 50                          push eax
+   207 0000015F E8(00000000)                call fclose                 ;close the file
+   208 00000164 83C404                      add esp,4                   ;clear the stack
+   209                                      
+   210 00000167 68[AE000000]                push fname               ;pass file name
+   211 0000016C 68[BE000000]                push ErrorFileText          ;push error message string
+   212 00000171 E8(00000000)                call printf                 ;call printf function
+   213 00000176 83C408                      add esp,8                   ;clear stack
+   214 00000179 EB3B                        jmp BoilerB                 ;jump to the end
+   215                                      
+   216                                  main:
+   217 0000017B 55                          push ebp                    ;create framre
+   218 0000017C 89E5                        mov ebp,esp                 ;save fram entry
+   219 0000017E 53                          push ebx                    ;save all sacred registers
+   220 0000017F 56                          push esi
+   221 00000180 57                          push edi
+   222                                  
+   223                                  ;;boiler plate above
+   224                                  
+   225 00000181 8B7D08                      mov edi,[ebp+8]             ;save arg count
+   226 00000184 83FF01                      cmp edi,1                  ;compare if argcount is 1
+   227 00000187 76C1                        jbe Error                    ;if that it goes straight to error
+   228                                  
+   229 00000189 8B7D08                      mov edi,[ebp+8]             ;save arg count
+   230 0000018C 8B750C                      mov esi,[ebp+12]            ;save arg
+   231 0000018F 83FF02                      cmp edi,2                   ;if argcount is 2
+   232 00000192 0F8468FEFFFF                je RCS                      ;go to number testing
+   233                                  
+   234 00000198 E9F0FEFFFF                  jmp Numtest1                ;else jump for number checking
+   235                                  
+   236                                  Generated:
+   237 0000019D 8B750C                      mov esi,[ebp+12]            ;get argument address
+   238 000001A0 8B7604                      mov esi,[esi+4]               ;move that argument to esi
+   239 000001A3 56                          push esi                    ;push argument[1]
+   240 000001A4 68[AE000000]                push fname                  ;push filename string
+   241 000001A9 68[E4000000]                push GenerateString         ;pass string message
+   242 000001AE E8(00000000)                call printf                 ;printf function
+   243 000001B3 83C40C                      add esp,12                  ;3 push x 4 pointer
+   244                                      
+   245                                  BoilerB:                        
+   246                                  ;;boiler plate below
+   247 000001B6 5F                          pop edi                     ;restore registers
+   248 000001B7 5E                          pop esi
+   249 000001B8 5B                          pop ebx
+   250 000001B9 89EC                        mov esp,ebp                 ;go back to frame entry
+   251 000001BB 5D                          pop ebp                     ;destroy frame to furter use
+   252 000001BC C3                          ret                         ;go back to linux

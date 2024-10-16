@@ -1,0 +1,43 @@
+     1                                  [section .data]
+     2                                  
+     3 00000000 25643A25730A00              PrintString db "%d:%s",10,0
+     4                                  
+     5                                  [section .bss]
+     6                                  
+     7                                  [section .text]
+     8                                  
+     9                                  extern printf
+    10                                  global main
+    11                                  
+    12                                  main:
+    13 00000000 55                          push ebp                    ;create frame
+    14 00000001 89E5                        mov ebp,esp                 ;save stack value
+    15 00000003 53                          push ebx                    ;push all registers
+    16 00000004 56                          push esi                    
+    17 00000005 57                          push edi
+    18                                  
+    19                                  ;;above boiler plate
+    20                                  
+    21 00000006 8B7D08                      mov edi,[ebp+8]             ;get args count
+    22 00000009 8B5D0C                      mov ebx,[ebp+12]            ;get 1st count address
+    23                                  
+    24 0000000C 31F6                        xor esi,esi                 ;clear esi
+    25                                  
+    26                                  .loop:
+    27 0000000E FF34B3                      push dword[ebx+esi*4]       ;push that value on stack
+    28 00000011 56                          push esi                    ;arg number
+    29 00000012 68[00000000]                push PrintString            ;print string
+    30 00000017 E8(00000000)                call printf                 ;call printf
+    31 0000001C 83C408                      add esp,8                   ;clear stack
+    32 0000001F 46                          inc esi                     ;increment to next string
+    33 00000020 4F                          dec edi                     ;decrement arg count
+    34 00000021 75EB                        jnz .loop
+    35                                  
+    36                                  ;;below boiler plate
+    37                                  
+    38 00000023 5F                          pop edi                     ;give back all registers
+    39 00000024 5E                          pop esi
+    40 00000025 5B                          pop ebx
+    41 00000026 89EC                        mov esp,ebp                 ;give stack back
+    42 00000028 5D                          pop ebp                     ;destroy frame
+    43 00000029 C3                          ret                         ;go back 2 linux

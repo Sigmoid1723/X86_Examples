@@ -1,0 +1,236 @@
+     1                                  section .data
+     2                                      
+     3                                  Scrwidth: equ 20                ;80 character by defualt assumtion
+     4 00000000 1B5B30313B303148        Posterm: db 27,"[01;01H"        ;<Esc> [<Y>,<X>H
+     5                                      POSLEN equ $-Posterm        ;length of term positioning
+     6 00000008 1B5B324A                Clearterm:db 27,"[2J"           ;<Esc>[2J
+     7                                      CLEARLEN equ $-Clearterm    ;length of term celarstirng
+     8 0000000C 456174206174204A6F-     Admsg: db "Eat at Joe's!",10,10 ;Ad message
+     8 00000015 652773210A0A       
+     9                                      ADLEN equ $-Admsg           ;admsg length
+    10 0000001B 507265737320456E74-     Prompt: db "Press Enter:"       ;user prompt
+    10 00000024 65723A             
+    11                                      PROMTLEN equ $-Prompt       ;Legth of the user prompt
+    12                                      ; table of ascii digits upto 80
+    13                                  
+    14                                  Digits:
+    15 00000027 303030313032303330-         db "0001020304050607080910111213141516171819"
+    15 00000030 343035303630373038-
+    15 00000039 303931303131313231-
+    15 00000042 333134313531363137-
+    15 0000004B 31383139           
+    16 0000004F 323032313232323332-         db "2021222324252627282930313233343536373839"
+    16 00000058 343235323632373238-
+    16 00000061 323933303331333233-
+    16 0000006A 333334333533363337-
+    16 00000073 33383339           
+    17 00000077 343034313432343334-         db "4041424344454647484950515253545556575859"
+    17 00000080 343435343634373438-
+    17 00000089 343935303531353235-
+    17 00000092 333534353535363537-
+    17 0000009B 35383539           
+    18 0000009F 363036313632363336-         db "606162636465666768697071727374757677787980"
+    18 000000A8 343635363636373638-
+    18 000000B1 363937303731373237-
+    18 000000BA 333734373537363737-
+    18 000000C3 373837393830       
+    19                                  
+    20                                  section .bss
+    21                                  
+    22                                  section .text
+    23                                  
+    24                                      ;macro for exiting program
+    25                                      
+    26                                  %macro ExitProg 0
+    27                                      mov eax,1                   ;specify sys_exit
+    28                                      mov ebx,0                   ;return 0
+    29                                      int 80h                     ;kernel call
+    30                                  %endmacro
+    31                                  
+    32                                      ;wait enter macro
+    33                                      
+    34                                  %macro WaitEnter 0
+    35                                      mov eax,3                   ;specify sys_read
+    36                                      mov ebx,0                   ;specify file descriptor 0,stdin
+    37                                      int 80h                     ;kernel call
+    38                                  %endmacro
+    39                                  
+    40                                      ;macro for writing string
+    41                                  
+    42                                  %macro Writestr 2               ;2 args %1 = string address,%2= stirng length
+    43                                      push eax                    ;save register
+    44                                      push ebx
+    45                                      mov ecx,%1                  ;put string address to ECX
+    46                                      mov edx,%2                  ;put stirng length to ECX
+    47                                      mov eax,4                   ;specify sys_write call
+    48                                      mov ebx,1                   ;specify file descriptor 1,stdout
+    49                                      int 80h                     ;kernel call
+    50                                      pop ebx                     ;restore caller register
+    51                                      pop eax
+    52                                  %endmacro
+    53                                  
+    54                                      ;macro for clearing screenlegth
+    55                                  
+    56                                  %macro Clrscr 0
+    57                                      push eax                    ;saving caller register
+    58                                      push ebx
+    59                                      push ecx
+    60                                      push edx
+    61                                      Writestr Clearterm,CLEARLEN ;call writestr macro
+    62                                      pop edx                     ;restore all register
+    63                                      pop ecx
+    64                                      pop ebx
+    65                                      pop eax
+    66                                  %endmacro
+    67                                  
+    68                                      ;macro for positioning in X,Y cursor
+    69                                  
+    70                                  %macro Gotoxy 2                 ;%1 = X value,%2 = Y value
+    71                                      pushad                      ;saving caller registers
+    72                                      xor edx,edx                 ;clear edx
+    73                                      xor ecx,ecx                 ;clear ecx
+    74                                  
+    75                                      ;Poke the Y digits
+    76                                      mov dl,%2                   ;put Y value in offset
+    77                                      mov cx,word [Digits+edx*2]  ;fetch decimal digits to cx
+    78                                      mov word [Posterm+2],cx     ;poke digits into control string
+    79                                  
+    80                                      ;Poke the X digits
+    81                                      mov dl,%1                   ;put X value in offset
+    82                                      mov cx,word [Digits+edx*2]  ;fetch decimal digits to cx
+    83                                      mov word [Posterm+5],cx     ;poke digits into contorl string
+    84                                  
+    85                                      Writestr Posterm,POSLEN     ;send sequence to stdout
+    86                                      popad                       ;restore caller registers
+    87                                  %endmacro
+    88                                  
+    89                                      ;macro for centering string
+    90                                  
+    91                                  %macro Writectr 3               ;%1 = row,%2 = string addr,%3 = string length
+    92                                      push ebx                    ;save caller ebx
+    93                                      push edx                    ;save caller edx
+    94                                      mov edx,%3                  ;load string length to edx
+    95                                      xor ebx,ebx                 ;clear ebx
+    96                                      mov bl,Scrwidth             ;load screen width value in bl
+    97                                      sub bl,dl                   ;calculate diffrence of two x value
+    98                                      shr bl,1                    ;divide value by 2 for X value
+    99                                      Gotoxy bl,%1                ;position cursor for display
+   100                                      Writestr %2,%3              ;write string to console
+   101                                      pop edx                     ;restore caller registers
+   102                                      pop ebx
+   103                                  %endmacro
+   104                                  
+   105                                  global _start                   ;linker needs this an entry point
+   106                                  
+   107                                  _start:
+   108 00000000 90                          nop                         ;keep gdb happy
+   109                                  
+   110                                      Clrscr                      ;clear terminal display
+    57 00000001 50                  <1>  push eax
+    58 00000002 53                  <1>  push ebx
+    59 00000003 51                  <1>  push ecx
+    60 00000004 52                  <1>  push edx
+    61                              <1>  Writestr Clearterm,CLEARLEN
+    43 00000005 50                  <2>  push eax
+    44 00000006 53                  <2>  push ebx
+    45 00000007 B9[08000000]        <2>  mov ecx,%1
+    46 0000000C BA04000000          <2>  mov edx,%2
+    47 00000011 B804000000          <2>  mov eax,4
+    48 00000016 BB01000000          <2>  mov ebx,1
+    49 0000001B CD80                <2>  int 80h
+    50 0000001D 5B                  <2>  pop ebx
+    51 0000001E 58                  <2>  pop eax
+    62 0000001F 5A                  <1>  pop edx
+    63 00000020 59                  <1>  pop ecx
+    64 00000021 5B                  <1>  pop ebx
+    65 00000022 58                  <1>  pop eax
+   111                                      Writectr 12,Admsg,ADLEN     ;positioning add in center to display
+    92 00000023 53                  <1>  push ebx
+    93 00000024 52                  <1>  push edx
+    94 00000025 BA0F000000          <1>  mov edx,%3
+    95 0000002A 31DB                <1>  xor ebx,ebx
+    96 0000002C B314                <1>  mov bl,Scrwidth
+    97 0000002E 28D3                <1>  sub bl,dl
+    98 00000030 D0EB                <1>  shr bl,1
+    99                              <1>  Gotoxy bl,%1
+    71 00000032 60                  <2>  pushad
+    72 00000033 31D2                <2>  xor edx,edx
+    73 00000035 31C9                <2>  xor ecx,ecx
+    74                              <2> 
+    75                              <2> 
+    76 00000037 B20C                <2>  mov dl,%2
+    77 00000039 668B8C12[27000000]  <2>  mov cx,word [Digits+edx*2]
+    78 00000041 66890D[02000000]    <2>  mov word [Posterm+2],cx
+    79                              <2> 
+    80                              <2> 
+    81 00000048 88DA                <2>  mov dl,%1
+    82 0000004A 668B8C12[27000000]  <2>  mov cx,word [Digits+edx*2]
+    83 00000052 66890D[05000000]    <2>  mov word [Posterm+5],cx
+    84                              <2> 
+    85                              <2>  Writestr Posterm,POSLEN
+    43 00000059 50                  <3>  push eax
+    44 0000005A 53                  <3>  push ebx
+    45 0000005B B9[00000000]        <3>  mov ecx,%1
+    46 00000060 BA08000000          <3>  mov edx,%2
+    47 00000065 B804000000          <3>  mov eax,4
+    48 0000006A BB01000000          <3>  mov ebx,1
+    49 0000006F CD80                <3>  int 80h
+    50 00000071 5B                  <3>  pop ebx
+    51 00000072 58                  <3>  pop eax
+    86 00000073 61                  <2>  popad
+   100                              <1>  Writestr %2,%3
+    43 00000074 50                  <2>  push eax
+    44 00000075 53                  <2>  push ebx
+    45 00000076 B9[0C000000]        <2>  mov ecx,%1
+    46 0000007B BA0F000000          <2>  mov edx,%2
+    47 00000080 B804000000          <2>  mov eax,4
+    48 00000085 BB01000000          <2>  mov ebx,1
+    49 0000008A CD80                <2>  int 80h
+    50 0000008C 5B                  <2>  pop ebx
+    51 0000008D 58                  <2>  pop eax
+   101 0000008E 5A                  <1>  pop edx
+   102 0000008F 5B                  <1>  pop ebx
+   112                                      Gotoxy 1,23                 ;position cursor for press enter prompt
+    71 00000090 60                  <1>  pushad
+    72 00000091 31D2                <1>  xor edx,edx
+    73 00000093 31C9                <1>  xor ecx,ecx
+    74                              <1> 
+    75                              <1> 
+    76 00000095 B217                <1>  mov dl,%2
+    77 00000097 668B8C12[27000000]  <1>  mov cx,word [Digits+edx*2]
+    78 0000009F 66890D[02000000]    <1>  mov word [Posterm+2],cx
+    79                              <1> 
+    80                              <1> 
+    81 000000A6 B201                <1>  mov dl,%1
+    82 000000A8 668B8C12[27000000]  <1>  mov cx,word [Digits+edx*2]
+    83 000000B0 66890D[05000000]    <1>  mov word [Posterm+5],cx
+    84                              <1> 
+    85                              <1>  Writestr Posterm,POSLEN
+    43 000000B7 50                  <2>  push eax
+    44 000000B8 53                  <2>  push ebx
+    45 000000B9 B9[00000000]        <2>  mov ecx,%1
+    46 000000BE BA08000000          <2>  mov edx,%2
+    47 000000C3 B804000000          <2>  mov eax,4
+    48 000000C8 BB01000000          <2>  mov ebx,1
+    49 000000CD CD80                <2>  int 80h
+    50 000000CF 5B                  <2>  pop ebx
+    51 000000D0 58                  <2>  pop eax
+    86 000000D1 61                  <1>  popad
+   113                                      Writestr Prompt,PROMTLEN    ;display press enter prompt
+    43 000000D2 50                  <1>  push eax
+    44 000000D3 53                  <1>  push ebx
+    45 000000D4 B9[1B000000]        <1>  mov ecx,%1
+    46 000000D9 BA0C000000          <1>  mov edx,%2
+    47 000000DE B804000000          <1>  mov eax,4
+    48 000000E3 BB01000000          <1>  mov ebx,1
+    49 000000E8 CD80                <1>  int 80h
+    50 000000EA 5B                  <1>  pop ebx
+    51 000000EB 58                  <1>  pop eax
+   114                                      WaitEnter                   ;wait user to enter
+    35 000000EC B803000000          <1>  mov eax,3
+    36 000000F1 BB00000000          <1>  mov ebx,0
+    37 000000F6 CD80                <1>  int 80h
+   115                                      ExitProg                    ;Exit the program
+    27 000000F8 B801000000          <1>  mov eax,1
+    28 000000FD BB00000000          <1>  mov ebx,0
+    29 00000102 CD80                <1>  int 80h

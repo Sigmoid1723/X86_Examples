@@ -1,0 +1,91 @@
+     1                                  ;    Run it this way:
+     2                                  ;    
+     3                                  ;    hexdump < (input file)
+     4                                  ;
+     5                                  ;    Build using these commands:
+     6                                  ;    
+     7                                  ;    nasm -f elf64 -g -F stabs hexdump.asm -l hexdump.asm
+     8                                  ;    ld -o hexdump hexdump.o
+     9                                      
+    10                                  section .bss
+    11                                  
+    12                                      BUFFLEN equ 16              ;16 len buffer
+    13 00000000 <res 10h>                   Buff: resb BUFFLEN              ;text buffer
+    14                                  
+    15                                  section .data
+    16                                  
+    17 00000000 203030203030203030-         Hexstr: db " 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00",10
+    17 00000009 203030203030203030-
+    17 00000012 203030203030203030-
+    17 0000001B 203030203030203030-
+    17 00000024 203030203030203030-
+    17 0000002D 2030300A           
+    18                                      HEXLEN equ $-Hexstr
+    19                                  
+    20 00000031 303132333435363738-         Digits: db "0123456789ABCDEF"
+    20 0000003A 39414243444546     
+    21                                  
+    22                                  section .text
+    23                                  
+    24                                  global _start
+    25                                  
+    26                                  _start:
+    27 00000000 90                          nop                         ;keep gdb start at first instruction so uninitialized values(assuming)
+    28                                  
+    29                                      ;Read buffer text full of data
+    30                                  Read:
+    31 00000001 B803000000                  mov eax,3                   ;specify sys_read call
+    32 00000006 BB00000000                  mov ebx,0                   ;specify file descripter 0,stdin
+    33 0000000B B9[00000000]                mov ecx,Buff                ;pass buffer address
+    34 00000010 BA10000000                  mov edx,BUFFLEN             ;number of bytes to read from
+    35 00000015 CD80                        int 80h                     ;sys_read call
+    36 00000017 89C5                        mov ebp,eax                 ;save number of files read for later
+    37 00000019 83F800                      cmp eax,0                   ;if eax =  0 then it reached EOF
+    38 0000001C 7459                        je Done                     ;jump for exit
+    39                                  
+    40                                      ;setup register for process buffer steps
+    41 0000001E BE[00000000]                mov esi,Buff                ;move Buff address to esi
+    42 00000023 BF[00000000]                mov edi,Hexstr              ;place address of Hexstring to edi
+    43 00000028 31C9                        xor ecx,ecx                 ;clear ecx register
+    44                                  
+    45                                  Scan:
+    46 0000002A 31C0                        xor eax,eax                 ;clear eax register
+    47                                  
+    48                                      ;calculate the offset in hexstr, which is value in ecx X 3
+    49 0000002C 89CA                        mov edx,ecx                 ;copy character counter to edx
+    50 0000002E D1E2                        shl edx,1                   ;multiply pointer by 2 using left shift
+    51 00000030 01CA                        add edx,ecx                 ;complete the multiplication x3
+    52                                  
+    53                                      ;get character from buffer and put in eax and ebx
+    54 00000032 678A040E                    mov al,byte [esi+ecx]       ;put the byte from input buffer to al
+    55 00000036 89C3                        mov ebx,eax                 ;duplicate byte from bl for second nybble
+    56                                  
+    57                                      ;look up low nybble and insert into string
+    58 00000038 240F                        and al,0fh                  ;mask out all but low nybble
+    59 0000003A 678A80[31000000]            mov al,byte [Digits+eax]    ;look up the character value
+    60 00000041 678882[02000000]            mov byte [Hexstr+edx+2],al     ;write lsb character digit to line string
+    61                                  
+    62                                      ;look up high nybble character insert into string
+    63 00000048 C0EB04                      shr bl,4                    ;shift high 4 bits into low 4 bits
+    64 0000004B 678A9B[31000000]            mov bl,byte[Digits+ebx]     ;lookup character equivelent to nybble
+    65 00000052 67889A[01000000]            mov byte [Hexstr+edx+1],bl  ;write most significant byte to string
+    66                                  
+    67                                      ;bump pointer to next character and see if we are done:
+    68 00000059 FFC1                        inc ecx                     ;increment line in pointer
+    69 0000005B 39E9                        cmp ecx,ebp                 ;compare to number of character in buffer
+    70 0000005D 76CB                        jna Scan                    ;loop back ecx <= characters in buffer
+    71                                  
+    72                                      ;write the hex value
+    73                                  Write:
+    74 0000005F B804000000                  mov eax,4                   ;specify sys_write call
+    75 00000064 BB01000000                  mov ebx,1                   ;specify file descripter 1,stdin
+    76 00000069 B9[00000000]                mov ecx,Hexstr              ;pass address of Hexstr
+    77 0000006E BA31000000                  mov edx,HEXLEN              ;pass length of HexStr
+    78 00000073 CD80                        int 80h                     ;call sys_write
+    79 00000075 EB8A                        jmp Read                    ;jump to read for other 16 bits
+    80                                  
+    81                                      ;lets exit its all done
+    82                                  Done:
+    83 00000077 B801000000                  mov eax,1                   ;specify sys_exit call
+    84 0000007C BB00000000                  mov ebx,0                   ;specify return value 0
+    85 00000081 CD80                        int 80h                     ;call sys_exit 

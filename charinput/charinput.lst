@@ -1,0 +1,83 @@
+     1                                  [section .data]
+     2                                  
+     3 00000000 456E74657220746865-     Iprompt: db "Enter the number you want to display:",0
+     3 00000009 206E756D6265722079-
+     3 00000012 6F752077616E742074-
+     3 0000001B 6F20646973706C6179-
+     3 00000024 3A00               
+     4 00000026 256400                  Intformat: db "%d",0
+     5 00000029 596F7572206E756D62-     Displayprompt: db "Your number is: %d",10,0
+     5 00000032 65722069733A202564-
+     5 0000003B 0A00               
+     6 0000003D 456E74657220746865-     Tprompt: db "Enter the text you want to enter(72 char) followed by enter: ",0
+     6 00000046 207465787420796F75-
+     6 0000004F 2077616E7420746F20-
+     6 00000058 656E74657228373220-
+     6 00000061 636861722920666F6C-
+     6 0000006A 6C6F77656420627920-
+     6 00000073 656E7465723A2000   
+     7 0000007B 546865207465787420-     Tdprompt: db "The text you enterd was: %s",10,0
+     7 00000084 796F7520656E746572-
+     7 0000008D 64207761733A202573-
+     7 00000096 0A00               
+     8                                  
+     9                                  [section .bss]
+    10                                  
+    11 00000000 ????????                    Intval resd 1                   ;reserve word
+    12 00000004 <res 80h>                   Maxchar resb 128                ;reserve 92 characters for text
+    13                                  
+    14                                  [section .text]                 ;section contain code
+    15                                  
+    16                                  extern fgets
+    17                                  extern stdin
+    18                                  extern scanf
+    19                                  extern printf
+    20                                  global main
+    21                                  
+    22                                  main:
+    23 00000000 55                          push ebp                    ;make hook
+    24 00000001 89E5                        mov ebp,esp                 ;save esi value
+    25 00000003 53                          push ebx                    ;save registers
+    26 00000004 56                          push esi
+    27 00000005 57                          push edi
+    28                                  
+    29                                  ;;boiler plate above
+    30                                  
+    31                                      
+    32 00000006 68[3D000000]                push Tprompt                ;put address for prompt
+    33 0000000B E8(00000000)                call printf                 ;call printf
+    34 00000010 83C404                      add esp,4                   ;clean up stack
+    35                                  
+    36 00000013 FF35[00000000]              push dword [stdin]          ;pass stdin for fgets
+    37 00000019 6A48                        push 72                     ;show 72 charcter only
+    38 0000001B 68[04000000]                push Maxchar                ;put address where we want to store this
+    39 00000020 E8(00000000)                call fgets                  ;call fgets
+    40 00000025 83C40C                      add esp,12                  ;clear stack
+    41                                  
+    42 00000028 68[04000000]                push Maxchar                ;put address of the string we want to show
+    43 0000002D 68[7B000000]                push Tdprompt               ;put address of the prompt
+    44 00000032 E8(00000000)                call printf                 ;cal printf
+    45 00000037 83C408                      add esp,8                   ;clear stack
+    46 0000003A 68[00000000]                push Iprompt                ;put address for prompt
+    47 0000003F E8(00000000)                call printf                 ;call printf
+    48 00000044 83C404                      add esp,4                   ;4 * number of push we did to clear stack
+    49                                  
+    50 00000047 68[00000000]                push Intval                 ;pass address for scanf
+    51 0000004C 68[26000000]                push Intformat              ;pass format for scanf
+    52 00000051 E8(00000000)                call scanf                  ;calling scanf
+    53 00000056 83C408                      add esp,8                   ;clear stack
+    54                                  
+    55 00000059 FF35[00000000]              push dword[Intval]          ;push for display the integer
+    56 0000005F 68[29000000]                push Displayprompt          ;put displayprompt address
+    57 00000064 E8(00000000)                call printf                 ;call the printf
+    58 00000069 83C408                      add esp,8                   ;clear stack
+    59                                  
+    60                                      
+    61                                  ;;boilerplate below
+    62 0000006C 5F                          pop edi                     ;getting all registers back
+    63 0000006D 5E                          pop esi
+    64 0000006E 5B                          pop ebx
+    65 0000006F 89EC                        mov esp,ebp                 ;bring back to we started out
+    66 00000071 5D                          pop ebp                     ;release hook
+    67 00000072 C3                          ret                         ;go home dawg
+    68                                      

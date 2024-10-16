@@ -1,0 +1,115 @@
+     1                                  [section .data]
+     2                                  
+     3 00000000 432074696D653A2000      Ctimetext: db"C time: ",0
+     4 00000009 4C6F63616C2074696D-     Localtimetext: db "Local time:%d %d/%d/%d",0
+     4 00000012 653A25642025642F25-
+     4 0000001B 642F256400         
+     5 00000020 4120746F74616C206F-     Elapsed: db "A total of %d seconds has elapsed since program began running.",10,0
+     5 00000029 66202564207365636F-
+     5 00000032 6E6473206861732065-
+     5 0000003B 6C6170736564207369-
+     5 00000044 6E63652070726F6772-
+     5 0000004D 616D20626567616E20-
+     5 00000056 72756E6E696E672E0A-
+     5 0000005F 00                 
+     6                                      
+     7                                  [section .bss]
+     8                                  
+     9 00000000 ????????                    Oldtime resd 1              ;reserve double for time
+    10 00000004 ????????                    Newtime resd 1              ;reserve double for time
+    11 00000008 <res 24h>                   Tmstruct resd 9             ;tm struct contain 9 dwords
+    12 0000002C ????????                    Timediff resd 1             ;put timediff
+    13                                  
+    14                                  [section .text]                 ;section containing code
+    15                                  
+    16                                  extern difftime
+    17                                  extern getchar
+    18                                  extern localtime
+    19                                  extern ctime
+    20                                  extern printf
+    21                                  extern time
+    22                                  global main
+    23                                  
+    24                                  main:
+    25 00000000 55                          push ebp                    ;create hook
+    26 00000001 89E5                        mov ebp,esp                 ;save value for esp to ebp
+    27 00000003 53                          push ebx                    ;save all registers
+    28 00000004 56                          push esi
+    29 00000005 57                          push edi
+    30                                  
+    31                                  ;;boiler plate above
+    32                                  
+    33                                      ; push Oldtime                ;mention address you want to store time
+    34 00000006 6A00                        push dword 0                ;pass null pointer
+    35 00000008 E8(00000000)                call time                   ;call time function
+    36 0000000D 83C404                      add esp,4                   ;clear stack
+    37 00000010 A3[00000000]                mov [Oldtime],eax           ;put that value in oldtime
+    38                                  
+    39 00000015 68[00000000]                push Ctimetext              ;push prompt
+    40 0000001A E8(00000000)                call printf                 ;call printf
+    41 0000001F 83C404                      add esp,4                   ;clear stack
+    42                                      
+    43 00000022 68[00000000]                push Oldtime                ;push stord time pointer
+    44 00000027 E8(00000000)                call ctime                  ;call ctime function
+    45 0000002C 83C404                      add esp,4                   ;clear stack
+    46                                      
+    47 0000002F 50                          push eax                    ;push address of fetched value
+    48 00000030 E8(00000000)                call printf                 ;call printf
+    49 00000035 83C404                      add esp,4                   ;clear stack
+    50                                      
+    51                                      ; push Localtimetext          ;prompt address
+    52                                      ; call printf                 ;call printf
+    53                                      ; add esp,4                   ;clear stack
+    54                                  
+    55 00000038 68[00000000]                push Oldtime                ;push stored time pointer
+    56 0000003D E8(00000000)                call localtime              ;call localtime function
+    57 00000042 83C404                      add esp,4                   ;clear stack
+    58                                  
+    59 00000045 8B5014                      mov edx,dword[eax+20]       ;get year value
+    60 00000048 81C26C070000                add edx,1900                ;add 1900 year to it
+    61 0000004E 8B4810                      mov ecx,dword[eax+16]       ;fetch month value
+    62 00000051 83C101                      add ecx,1
+    63 00000054 8B580C                      mov ebx,dword[eax+12]       ;day value
+    64 00000057 8B7018                      mov esi,dword[eax+24]        ;week day from sunday
+    65                                      
+    66 0000005A 52                          push edx                    ;push that value in stack
+    67 0000005B 51                          push ecx                    ;push value for print
+    68 0000005C 53                          push ebx                    ;push value for print
+    69 0000005D 56                          push esi                    ;push that thing
+    70 0000005E 68[09000000]                push Localtimetext          ;prompt address
+    71 00000063 E8(00000000)                call printf                 ;print the time value as per localtime
+    72 00000068 83C408                      add esp,8                   ;clear stack
+    73                                  
+    74                                      ; mov esi,eax                 ;move copy to esi
+    75                                      ; mov edi,Tmstruct            ;tmstruct for firing
+    76                                      ; mov ecx,9                   ;9 time firing since tm struct 9 bytes
+    77                                      ; cld                         ;clear direction flag
+    78                                      ; rep movsd                   ;copy to local copy
+    79                                  
+    80                                      ; push Tmstruct               ;now print Tm struct
+    81                                      ; call printf                 ;print the time value as per localtime
+    82                                      ; add esp,4                   ;clear stack
+    83                                  
+    84 0000006B E8(00000000)                call getchar                ;get enter to get difference between time
+    85                                      
+    86 00000070 6A00                        push dword 0                ;pass null pointer
+    87 00000072 E8(00000000)                call time                   ;get newtime
+    88 00000077 83C404                      add esp,4                   ;clear stack
+    89 0000007A A3[04000000]                mov [Newtime],eax           ;move to new time
+    90                                  
+    91 0000007F 2B05[00000000]              sub eax,[Oldtime]           ;calculate difference
+    92 00000085 A3[2C000000]                mov [Timediff],eax          ;save the difference value
+    93                                  
+    94 0000008A FF35[2C000000]              push dword[Timediff]        ;push it into stack
+    95 00000090 68[20000000]                push Elapsed                ;put the prompt
+    96 00000095 E8(00000000)                call printf                 ;print this
+    97 0000009A 83C408                      add esp,8                   ;clear stack
+    98                                      
+    99                                  ;;boiler plate below
+   100                                  
+   101 0000009D 5F                          pop edi                     ;restore all registers
+   102 0000009E 5E                          pop esi
+   103 0000009F 5B                          pop ebx
+   104 000000A0 89EC                        mov esp,ebp                 ;return stack
+   105 000000A2 5D                          pop ebp                     ;clear hook
+   106 000000A3 C3                          ret                         ;return linux

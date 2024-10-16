@@ -1,0 +1,62 @@
+     1                                  section .bss
+     2                                  
+     3                                      Bufflen equ 1024            ;buffer lenght 1024 bytes
+     4 00000000 <res 400h>              Buff: resb Bufflen              ;reserve bufflen bytes
+     5                                  
+     6                                  section .data
+     7                                  
+     8                                  section .text
+     9                                  
+    10                                  global _start
+    11                                  
+    12                                  _start:
+    13 00000000 90                          nop                         ;keep gdb happy
+    14                                  
+    15                                      ;read buffer full of text form stdin
+    16                                  
+    17                                  Read:
+    18 00000001 B803000000                  mov eax,3                   ;specify sys_read call
+    19 00000006 BB00000000                  mov ebx,0                   ;specify file descripter 0:stdin
+    20 0000000B B9[00000000]                mov ecx,Buff                ;pass offset of the buffer to read through(address)
+    21 00000010 BA00040000                  mov edx,Bufflen             ;number of bytes i want to read
+    22 00000015 CD80                        int 80h                     ;calls sys_read
+    23 00000017 89C6                        mov esi,eax                 ;copy sys_read return value for safekeeping
+    24 00000019 83F800                      cmp eax,0                   ;if eax=0,sys_read reached EOF
+    25 0000001C 7438                        je Done                     ;jump if equal to compare
+    26                                  
+    27                                      ;setup register to process buffer steps
+    28 0000001E 89F1                        mov ecx,esi                 ;place the number of bytes read into the stack
+    29 00000020 BD[00000000]                mov ebp,Buff                ;place address of the buffer into ebp
+    30 00000025 FFCD                        dec ebp                     ;adjust count to offset
+    31                                  
+    32                                      ;Go through buffer and covert lowercase to uppercase
+    33                                  
+    34                                  Scan:
+    35                                      ; dec ecx
+    36 00000027 67807C0D0061                cmp byte [ebp+ecx],61h      ;compare with lowercase 'a'
+    37 0000002D 720E                        jb Next                     ;jump if below
+    38 0000002F 67807C0D007A                cmp byte [ebp+ecx],7ah      ;compare with lowercase 'z'
+    39 00000035 7706                        ja Next                     ;jump if above
+    40 00000037 67806C0D0020                sub byte [ebp+ecx],20h           ;subtarcact the 20h form lowercase to reach uppercase
+    41                                  
+    42                                  Next:
+    43 0000003D FFC9                        dec ecx                     ;Decrement counter
+    44                                      ; cmp ecx,0
+    45 0000003F 75E6                        jnz Scan                    ;jump till it reaches to zero
+    46                                  
+    47                                      ;write the buffer full of processed text
+    48                                  
+    49                                  Write:
+    50 00000041 B804000000                  mov eax,4                   ;specify sys_write call
+    51 00000046 BB01000000                  mov ebx,1                   ;specify file descripter 1, stdin
+    52 0000004B B9[00000000]                mov ecx,Buff                ;where we want to write
+    53 00000050 89F2                        mov edx,esi                 ;pass the number of bytes data in the buffer
+    54 00000052 CD80                        int 80h                     ;call sys_write
+    55 00000054 EBAB                        jmp Read                    ;jmp to read more characters
+    56                                  
+    57                                      ;now its done let's finish
+    58                                  
+    59                                  Done:
+    60 00000056 B801000000                  mov eax,1                   ;specify sys_exit call
+    61 0000005B BB00000000                  mov ebx,0                   ;specify sys_exit return 0
+    62 00000060 CD80                        int 80h                     ;call sys_exit

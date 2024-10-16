@@ -1,0 +1,220 @@
+     1                                  section .data
+     2                                  
+     3                                      EOL equ 10                  ;linxu end of line character
+     4                                      FILLCHAR equ 32             ;ascii seq character
+     5                                      ; HBARCHAR equ 192            ;use dash character if this doesn't display
+     6                                      HBARCHAR equ 45            ;use dash character if this doesn't display
+     7                                      STRROW equ 2                ;row where graph begins
+     8                                  
+     9                                      ;table of byte length members
+    10 00000000 0947113437121D2412-         Dataset db 9,71,17,52,55,18,29,36,18,68,77,63,58,44,0
+    10 00000009 444D3F3A2C00       
+    11                                  
+    12 0000000F 44617461206173206F-         Message db "Data as of 26/06/2023"
+    12 00000018 662032362F30362F32-
+    12 00000021 303233             
+    13                                      MSGLEN equ $-Message
+    14                                  
+    15                                      ;clear consol and put text cursor on origin (1,1)
+    16                                      ; Clrhome db 27,"[2J",27,"[01;01H",27,"[42m" ;<esc> Clear,<esc> Y:X,<esc>GreenBG
+    17                                      ; Clrhome db 27,"[2J",27,"[01;01H",27,"[32m" ;<esc> Clear,<esc> Y:X,<esc>GreenBG
+    18 00000024 1B5B324A1B5B30313B-         Clrhome db 27,"[2J",27,"[01;01H",27,"[37m",27,"[44m" ;<esc> Clear,<esc> Y:X,<esc>Whitetext,<esc>BlueBG
+    18 0000002D 3031481B5B33376D1B-
+    18 00000036 5B34346D           
+    19                                      CLRLEN equ $-Clrhome            ;length of terminal clear string
+    20                                  
+    21                                  
+    22                                  section .bss                    ;section containing uninitialized data
+    23                                  
+    24                                      COLS equ 81                 ;line leght + 1 for EOL
+    25                                      ROWS equ 25                 ;number of line in display
+    26 00000000 <res 7E9h>                  Vidbuff resb COLS*ROWS      ;vidbuff reserve bytes
+    27                                  
+    28                                  section .text
+    29                                  
+    30                                  global _start                   ;linker entry point
+    31                                  
+    32                                      ;macro for clearing terminal
+    33                                  
+    34                                  %macro Clrterm 0
+    35                                      pushad                      ;save all register
+    36                                      mov eax,4                   ;mention sys_write call
+    37                                      mov ebx,1                   ;specify file descriptor 1, stdin
+    38                                      mov ecx,Clrhome             ;put Clrhome address
+    39                                      mov edx,CLRLEN              ;Clrhome length
+    40                                      int 80h                     ;kernel call
+    41                                      popad                       ;restore all register
+    42                                  %endmacro
+    43                                  
+    44                                      ;procedure for display text buffer
+    45                                  
+    46                                  show:
+    47 00000000 60                          pushad                      ;save all register
+    48 00000001 B804000000                  mov eax,4                   ;mention sys_write call
+    49 00000006 BB01000000                  mov ebx,1                   ;specify file descriptor 1,stdout
+    50 0000000B B9[00000000]                mov ecx,Vidbuff             ;pass offset to buffer
+    51 00000010 BAE9070000                  mov edx,COLS*ROWS           ;pass length of buffer
+    52 00000015 CD80                        int 80h                     ;kernel call
+    53 00000017 61                          popad                       ;restore all register
+    54 00000018 C3                          ret                         ;return home
+    55                                  
+    56                                      ;procedure for clear text buffer with spaces and EOLs
+    57                                  
+    58                                  Clrvid:
+    59 00000019 50                          push eax                    ;saving caller's registers
+    60 0000001A 51                          push ecx
+    61 0000001B 57                          push edi
+    62 0000001C FC                          cld                         ;clear DF, we are counting up memory
+    63 0000001D B020                        mov al,FILLCHAR             ;put the FILLchar in al
+    64 0000001F BF[00000000]                mov edi,Vidbuff             ;point destination index at buffer
+    65 00000024 B9E9070000                  mov ecx,COLS*ROWS           ;put count of character stored in ecx
+    66 00000029 F3AA                        rep stosb                   ;blast character at buffer?
+    67                                  
+    68                                      ;buffer is cleard now we need to insert EOL at each line end
+    69 0000002B BF[00000000]                mov edi,Vidbuff             ;point at destination index at buffer agian
+    70 00000030 4F                          dec edi                     ;start EOL poistion count at 0 character
+    71 00000031 B919000000                  mov ecx,ROWS                ;put number of rows at count register
+    72 00000036 83C751                  PtEOL: add edi ,COLS            ;add column count to edi
+    73 00000039 C6070A                      mov byte [edi],EOL          ;store EOL at end of the rows
+    74 0000003C E2F8                        loop PtEOL                  ;loopback until more line left
+    75 0000003E 5F                          pop edi                     ;restoring caller's registers
+    76 0000003F 59                          pop ecx
+    77 00000040 58                          pop eax
+    78 00000041 C3                          ret                         ;go home
+    79                                  
+    80                                      ; procedure for writing string to text buffer at 1-based , x, y position
+    81                                  
+    82                                  Wrtln:
+    83 00000042 50                          push eax                    ;saving caller's register
+    84 00000043 53                          push ebx
+    85 00000044 51                          push ecx
+    86 00000045 57                          push edi
+    87 00000046 FC                          cld                         ;clear DF for up-memory write
+    88 00000047 BF[00000000]                mov edi,Vidbuff             ;load the buffer offset
+    89 0000004C 48                          dec eax                     ;decrement Y value down 1 for address calc
+    90 0000004D 4B                          dec ebx                     ;adjust X value down by 1
+    91 0000004E B451                        mov ah,COLS                 ;move screen width to AH
+    92 00000050 F6E4                        mul ah                      ;do 8 bit multiplication AL*AH to AX
+    93 00000052 01C7                        add edi,eax                 ;add Y offset to vidbuff
+    94 00000054 01DF                        add edi,ebx                 ;add X offset to vid buffer
+    95 00000056 F3A4                        rep movsb                   ;blast string into buffer
+    96 00000058 5F                          pop edi                     ;restore all caller's registers
+    97 00000059 59                          pop ecx
+    98 0000005A 5B                          pop ebx
+    99 0000005B 58                          pop eax
+   100 0000005C C3                          ret                         ;go home
+   101                                  
+   102                                      ; generate "-------------" at X,Y in text buffer
+   103                                  
+   104                                  WrtHB:
+   105 0000005D 50                          push eax                    ;save register we might change
+   106 0000005E 53                          push ebx
+   107 0000005F 51                          push ecx
+   108 00000060 57                          push edi
+   109 00000061 FC                          cld                         ;clear DF for memory up-write
+   110 00000062 BF[00000000]                mov edi,Vidbuff             ;put address into destination register
+   111 00000067 48                          dec eax                     ;adjust Y value down for 1 address for calc
+   112 00000068 4B                          dec ebx                     ;adjust X value down for 1 address for calc
+   113 00000069 B451                        mov ah,COLS                 ;move screen width to all
+   114 0000006B F6E4                        mul ah                      ;AL*AH to AX
+   115 0000006D 01C7                        add edi,eax                 ;Add Y offset to EDI
+   116 0000006F 01DF                        add edi,ebx                 ;Add X offset to EDX
+   117 00000071 B02D                        mov al,HBARCHAR             ;put bar in al
+   118 00000073 F3AA                        rep stosb                   ;blast the bar into buffer
+   119 00000075 5F                          pop edi                     ;restore all registers
+   120 00000076 59                          pop ecx
+   121 00000077 5B                          pop ebx
+   122 00000078 58                          pop eax
+   123 00000079 C3                          ret                         ;go home
+   124                                  
+   125                                      ;procedure for genrating "0123456789" ruler at X,Y position
+   126                                  
+   127                                  Ruler:
+   128 0000007A 50                          push eax                    ;save caller's registers
+   129 0000007B 53                          push ebx
+   130 0000007C 51                          push ecx
+   131 0000007D 57                          push edi
+   132 0000007E BF[00000000]                mov edi,Vidbuff             ;put buffer address at edi
+   133 00000083 48                          dec eax                     ;adjust Y value down 1 for address calc
+   134 00000084 4B                          dec ebx                     ;adjust X value down 1 for address calc
+   135 00000085 B451                        mov ah,COLS                 ;move screen width to AH
+   136 00000087 F6E4                        mul ah                      ;8-bit mul AL*AH into AX
+   137 00000089 01C7                        add edi,eax                 ;add Y offset into buffer
+   138 0000008B 01DF                        add edi,ebx                 ;add X offset into buffer
+   139                                  
+   140                                      ; now it point to the memory where ruler begins
+   141 0000008D B031                        mov al,'1'                  ;start ruler with '1' digit
+   142 0000008F AA                      Dochar: stosb                   ;Note: no "rep" prefix
+   143 00000090 0431                        add al,'1'                  ;bump character value al by '1'
+   144 00000092 37                          aaa                         ;adjust AX to make BCD addition
+   145 00000093 0430                        add al,'0'                  ;add 30 to show ascii equivent code if more than 10
+   146 00000095 E2F8                        loop Dochar                 ;loop back till countregister ecx become 0
+   147 00000097 5F                          pop edi                     ;resotre all registers
+   148 00000098 59                          pop ecx
+   149 00000099 5B                          pop ebx
+   150 0000009A 58                          pop eax
+   151 0000009B C3                          ret                         ;go home
+   152                                  
+   153                                      ;----------------------------------------------------------------------------------------------------
+   154                                      ; Main Program
+   155                                      ;----------------------------------------------------------------------------------------------------
+   156                                  
+   157                                  _start:
+   158                                  
+   159 0000009C 90                          nop                         ;keep gdb happy
+   160                                  
+   161                                      ; Get the console and text display text buffer ready to go
+   162                                  
+   163                                      Clrterm                     ;clear the terminal
+    35 0000009D 60                  <1>  pushad
+    36 0000009E B804000000          <1>  mov eax,4
+    37 000000A3 BB01000000          <1>  mov ebx,1
+    38 000000A8 B9[24000000]        <1>  mov ecx,Clrhome
+    39 000000AD BA16000000          <1>  mov edx,CLRLEN
+    40 000000B2 CD80                <1>  int 80h
+    41 000000B4 61                  <1>  popad
+   164 000000B5 E85FFFFFFF                  call Clrvid                 ;initialize the buffer
+   165                                  
+   166                                      ; display top ruler
+   167                                  
+   168 000000BA B801000000                  mov eax,1                   ;load Y pos to al
+   169 000000BF BB01000000                  mov ebx,1                   ;load X pos to bl
+   170 000000C4 B950000000                  mov ecx,COLS-1              ;load ruler to length(81-1)
+   171 000000C9 E8ACFFFFFF                  call Ruler                  ;write ruler to buffer
+   172                                  
+   173                                      ; loop through dataset and graph data
+   174                                  
+   175 000000CE BE[00000000]                mov esi,Dataset             ;put the address of dataset in esi
+   176 000000D3 BB01000000                  mov ebx,1                   ;start all bars at left margin(X=1)
+   177 000000D8 BD00000000                  mov ebp,0                   ;dataset element index start at 0
+   178 000000DD 89E8                    .blast: mov eax,ebp             ;add dataset number to element index
+   179 000000DF 83C002                      add eax,STRROW              ;bias row value by row number of first bar
+   180 000000E2 8A0C2E                      mov cl,byte[esi+ebp]        ;put dataset value in low byte of ECX
+   181 000000E5 83F900                      cmp ecx,0                   ;see if 0 has been pulled from dataset
+   182 000000E8 7408                        je .rule2                   ;If we pulled 0 form dataset then we are done
+   183 000000EA E86EFFFFFF                  call WrtHB                  ;Graph data in horizontal bars
+   184 000000EF 45                          inc ebp                     ;Increment the dataset element index
+   185 000000F0 EBEB                        jmp .blast                  ;go back and do another bar
+   186                                  
+   187                                      ; Display the bottem ruler
+   188 000000F2 89E8                    .rule2: mov eax,ebp             ;use the dataset counter to the set ruler now
+   189 000000F4 83C002                      add eax,STRROW              ;bias down by the row of the first bars
+   190 000000F7 BB01000000                  mov ebx,1                   ;load X pos in BL
+   191 000000FC B950000000                  mov ecx,COLS-1              ;load ruler length to ECX
+   192 00000101 E874FFFFFF                  call Ruler                  ;write the ruler to buffer
+   193                                  
+   194                                      ; Informative message centerd of the last line
+   195 00000106 BE[0F000000]                mov esi,Message             ;load the address of the message to ESI
+   196 0000010B B915000000                  mov ecx,MSGLEN              ;its length to ecx
+   197 00000110 BB51000000                  mov ebx,COLS                ;add the screen width to ebx
+   198 00000115 29CB                        sub ebx,ecx                 ;calc diffrence btw screen width - message length
+   199 00000117 D1EB                        shr ebx,1                   ;divide the difference by 2 in value
+   200 00000119 B818000000                  mov eax,24                  ;set the display row at line 24
+   201 0000011E E81FFFFFFF                  call Wrtln                  ;display the centerd message
+   202                                  
+   203                                      ; Having written all that to buffer and send that buffer to console
+   204 00000123 E8D8FEFFFF                  call show                   ;refresh the buffer console
+   205                                  
+   206 00000128 B801000000              Exit: mov eax,1                 ;code for exit_syscall
+   207 0000012D BB00000000                  mov ebx,0                   ;return value 0
+   208 00000132 CD80                        int 80h                     ;make kernel call

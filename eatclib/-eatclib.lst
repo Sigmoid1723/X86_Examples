@@ -1,0 +1,48 @@
+     1                                      ; build it this way:
+     2                                      ; nasm -f elf32 -g -F stabs eatclib.asm -l eatclib.lst
+     3                                      ; gcc -m32 -o eatclib eatclib.o
+     4                                      ;
+     5                                      ; you have to have 32 bit c libraries(libc.so) in order to link and to do that:
+     6                                      ; sudo apt-get install gcc-multilib
+     7                                      ;
+     8                                      
+     9                                  [Section .data]                 ;section containing itnitalized data
+    10                                  
+    11 00000000 656174206174206A6F-     EatMsg: db "eat at joe's!",0
+    11 00000009 6527732100         
+    12                                  
+    13                                  [Section .bss]                  ;section containing unitnitalized data
+    14                                  
+    15                                  [Section .text]                 ;section containing code
+    16                                  
+    17                                  extern puts                    ;simple "put string" routine form glibc
+    18                                  global main                    ;required linker to find entry point
+    19                                  
+    20                                  main:
+    21 00000000 55                          push ebp                    ;setup stack frame for debugger
+    22 00000001 89E5                        mov ebp,esp
+    23 00000003 53                          push ebx                    ;preserve ebx,ebp,esi,edi
+    24 00000004 56                          push esi
+    25 00000005 57                          push edi
+    26                                  
+    27                                      ;boiler plate for calling c functions above
+    28                                  
+    29 00000006 68[00000000]                push EatMsg                 ;put address of the message on the stack
+    30 0000000B E8(00000000)                call puts                   ;call glibc function for displaying strings
+    31                                      ; call puts
+    32 00000010 83C404                      add esp,4                   ;clean stack by 4 bytes adjusting esp, since i push message after calling it i remove from stack to clean up for other values
+    33 00000013 83EC04                      sub esp,4                   ;check if stack data is there
+    34 00000016 E8(00000000)                call puts
+    35 0000001B 83C404                      add esp,4                   ;bring me back to where we started out
+    36                                  
+    37                                      ;boiler plate for calling c functions above
+    38 0000001E 5F                          pop edi                     ;restore saved registers
+    39 0000001F 5E                          pop esi
+    40 00000020 5B                          pop ebx
+    41 00000021 89EC                        mov esp,ebp                 ;destroy stack frame by returning initial address for stack
+    42 00000023 5D                          pop ebp                     ;move esp after poping ebp so it points to the above code block
+    43 00000024 C3                          ret                         ;return to linux
+    44                                      
+    45                                  
+    46                                      
+    47                                      

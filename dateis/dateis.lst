@@ -1,0 +1,89 @@
+   1              		.file	"dateis.c"
+   2              		.text
+   3              		.section	.rodata
+   4              	.LC0:
+   5 0000 54686520 		.string	"The date and time are: %s"
+   5      64617465 
+   5      20616E64 
+   5      2074696D 
+   5      65206172 
+   6              		.text
+   7              		.globl	main
+   9              	main:
+  10              	.LFB0:
+  11              		.cfi_startproc
+  12 0000 8D4C2404 		leal	4(%esp), %ecx
+  13              		.cfi_def_cfa 1, 0
+  14 0004 83E4F0   		andl	$-16, %esp
+  15 0007 FF71FC   		pushl	-4(%ecx)
+  16 000a 55       		pushl	%ebp
+  17 000b 89E5     		movl	%esp, %ebp
+  18              		.cfi_escape 0x10,0x5,0x2,0x75,0
+  19 000d 53       		pushl	%ebx
+  20 000e 51       		pushl	%ecx
+  21              		.cfi_escape 0xf,0x3,0x75,0x78,0x6
+  22              		.cfi_escape 0x10,0x3,0x2,0x75,0x7c
+  23 000f 83EC10   		subl	$16, %esp
+  24 0012 E8FCFFFF 		call	__x86.get_pc_thunk.bx
+  24      FF
+  25 0017 81C30200 		addl	$_GLOBAL_OFFSET_TABLE_, %ebx
+  25      0000
+  26 001d 65A11400 		movl	%gs:20, %eax
+  26      0000
+  27 0023 8945F4   		movl	%eax, -12(%ebp)
+  28 0026 31C0     		xorl	%eax, %eax
+  29 0028 83EC0C   		subl	$12, %esp
+  30 002b 8D45F0   		leal	-16(%ebp), %eax
+  31 002e 50       		pushl	%eax
+  32 002f E8FCFFFF 		call	time@PLT
+  32      FF
+  33 0034 83C410   		addl	$16, %esp
+  34 0037 83EC0C   		subl	$12, %esp
+  35 003a 8D45F0   		leal	-16(%ebp), %eax
+  36 003d 50       		pushl	%eax
+  37 003e E8FCFFFF 		call	ctime@PLT
+  37      FF
+  38 0043 83C410   		addl	$16, %esp
+  39 0046 83EC08   		subl	$8, %esp
+  40 0049 50       		pushl	%eax
+  41 004a 8D830000 		leal	.LC0@GOTOFF(%ebx), %eax
+  41      0000
+  42 0050 50       		pushl	%eax
+  43 0051 E8FCFFFF 		call	printf@PLT
+  43      FF
+  44 0056 83C410   		addl	$16, %esp
+  45 0059 B8000000 		movl	$0, %eax
+  45      00
+  46 005e 8B55F4   		movl	-12(%ebp), %edx
+  47 0061 652B1514 		subl	%gs:20, %edx
+  47      000000
+  48 0068 7405     		je	.L3
+  49 006a E8FCFFFF 		call	__stack_chk_fail_local
+  49      FF
+  50              	.L3:
+  51 006f 8D65F8   		leal	-8(%ebp), %esp
+  52 0072 59       		popl	%ecx
+  53              		.cfi_restore 1
+  54              		.cfi_def_cfa 1, 0
+  55 0073 5B       		popl	%ebx
+  56              		.cfi_restore 3
+  57 0074 5D       		popl	%ebp
+  58              		.cfi_restore 5
+  59 0075 8D61FC   		leal	-4(%ecx), %esp
+  60              		.cfi_def_cfa 4, 4
+  61 0078 C3       		ret
+  62              		.cfi_endproc
+  63              	.LFE0:
+  65              		.section	.text.__x86.get_pc_thunk.bx,"axG",@progbits,__x86.get_pc_thunk.bx,comdat
+  66              		.globl	__x86.get_pc_thunk.bx
+  67              		.hidden	__x86.get_pc_thunk.bx
+  69              	__x86.get_pc_thunk.bx:
+  70              	.LFB1:
+  71              		.cfi_startproc
+  72 0000 8B1C24   		movl	(%esp), %ebx
+  73 0003 C3       		ret
+  74              		.cfi_endproc
+  75              	.LFE1:
+  76              		.hidden	__stack_chk_fail_local
+  77              		.ident	"GCC: (Ubuntu 11.3.0-1ubuntu1~22.04.1) 11.3.0"
+  78              		.section	.note.GNU-stack,"",@progbits
